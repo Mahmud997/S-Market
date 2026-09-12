@@ -140,3 +140,21 @@ body { -webkit-font-smoothing: antialiased; }
 .cat-card:active {
   transform: scale(0.97);
 }
+
+
+/* S-Market bright 2026 */
+.cat-card { min-height: auto; }
+.cat-card:active { transform: scale(0.97); }
+
+#carouselDots {
+  bottom: 0.75rem !important;
+}
+#carouselPrev, #carouselNext {
+  background: rgba(255,255,255,0.9) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* soft colorful glow on main */
+main {
+  animation: fadeIn 0.35s ease;
+}

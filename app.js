@@ -398,75 +398,93 @@
         const box = $('#categoryChips');
         if (!box) return;
 
-        // Иконки по названию (как на маркетплейсах)
-        const iconMap = {
-            'напитки': 'cup-soda',
-            'снэки': 'cookie',
-            'сладости': 'candy',
-            'молочное': 'milk',
-            'еда': 'utensils',
-            'еда / кафе': 'utensils',
-            'кафе': 'utensils',
-            'одежда': 'shirt',
-            'техника': 'smartphone',
-            'жильё': 'home',
-            'жилье': 'home',
-            'авто': 'car',
-            'такси': 'car-taxi-front',
-            'мастера': 'wrench',
-            'скот': 'beef',
-            'скот / агро': 'wheat',
-            'агро': 'wheat',
-            'электроника': 'cpu',
-            'красота': 'sparkles',
-            'спорт': 'dumbbell',
-            'дети': 'baby',
-            'дом': 'sofa',
-            'книги': 'book-open',
-            'животные': 'paw-print',
-            'услуги': 'briefcase',
-            'мебель': 'armchair',
-            'обувь': 'footprints',
-            'игрушки': 'toy-brick'
+        // Реальные фото по ключевым словам в названии категории
+        const photoMap = {
+            'напит': 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400&h=400&fit=crop&q=80',
+            'снэк': 'https://images.unsplash.com/photo-1566478989037-eec72316493d?w=400&h=400&fit=crop&q=80',
+            'слад': 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52?w=400&h=400&fit=crop&q=80',
+            'шоколад': 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=400&h=400&fit=crop&q=80',
+            'молоч': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=400&fit=crop&q=80',
+            'йогурт': 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop&q=80',
+            'еда': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=400&fit=crop&q=80',
+            'кафе': 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop&q=80',
+            'одежд': 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=400&fit=crop&q=80',
+            'техник': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=400&fit=crop&q=80',
+            'электрон': 'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=400&fit=crop&q=80',
+            'авто': 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=400&fit=crop&q=80',
+            'машин': 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=400&fit=crop&q=80',
+            'такси': 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&h=400&fit=crop&q=80',
+            'жиль': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=400&fit=crop&q=80',
+            'дом': 'https://images.unsplash.com/photo-1484101403633-562f8919981a?w=400&h=400&fit=crop&q=80',
+            'мебел': 'https://images.unsplash.com/photo-1555041469-a586c45b775f?w=400&h=400&fit=crop&q=80',
+            'мастер': 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=400&fit=crop&q=80',
+            'инструм': 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=400&h=400&fit=crop&q=80',
+            'скот': 'https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=400&h=400&fit=crop&q=80',
+            'агро': 'https://images.unsplash.com/photo-1500937386664-56d7fcbd49e3?w=400&h=400&fit=crop&q=80',
+            'красот': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&h=400&fit=crop&q=80',
+            'спорт': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=400&h=400&fit=crop&q=80',
+            'дет': 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&h=400&fit=crop&q=80',
+            'книг': 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=400&fit=crop&q=80',
+            'животн': 'https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=400&fit=crop&q=80',
+            'обув': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop&q=80',
+            'игруш': 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=400&h=400&fit=crop&q=80',
+            'сервис': 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=400&fit=crop&q=80',
+            'услуг': 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=400&fit=crop&q=80',
+            'чай': 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&h=400&fit=crop&q=80',
+            'кофе': 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop&q=80',
+            'фрукт': 'https://images.unsplash.com/photo-1619566636858-adf3ef4644b9?w=400&h=400&fit=crop&q=80',
+            'овощ': 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400&h=400&fit=crop&q=80'
         };
-        const colors = [
-            { bg: 'bg-amber-50', icon: 'text-amber-500' },
-            { bg: 'bg-blue-50', icon: 'text-blue-600' },
-            { bg: 'bg-indigo-50', icon: 'text-indigo-500' },
-            { bg: 'bg-sky-50', icon: 'text-sky-600' },
-            { bg: 'bg-rose-50', icon: 'text-rose-500' },
-            { bg: 'bg-violet-50', icon: 'text-violet-500' },
-            { bg: 'bg-emerald-50', icon: 'text-emerald-600' },
-            { bg: 'bg-orange-50', icon: 'text-orange-500' },
-            { bg: 'bg-cyan-50', icon: 'text-cyan-600' },
-            { bg: 'bg-fuchsia-50', icon: 'text-fuchsia-500' }
+
+        const fallbackPhotos = [
+            'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=400&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=400&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=400&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop&q=80',
+            'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&h=400&fit=crop&q=80'
         ];
+
+        function photoForCategory(name) {
+            const key = (name || '').toLowerCase();
+            for (const [k, url] of Object.entries(photoMap)) {
+                if (key.includes(k)) return url;
+            }
+            // фото товара из этой категории, если есть
+            const fromProd = state.products.find(p => p.category === name && p.image);
+            if (fromProd?.image) return fromProd.image;
+            // стабильный fallback по хешу названия
+            let h = 0;
+            for (let i = 0; i < key.length; i++) h = (h + key.charCodeAt(i) * 17) % fallbackPhotos.length;
+            return fallbackPhotos[h];
+        }
 
         const cats = state.categories.length ? state.categories : [];
         if (cats.length === 0) {
-            box.innerHTML = `<div class="col-span-4 text-center py-6 text-sm text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">Категории появятся, когда админ их добавит</div>`;
-            if (window.lucide) lucide.createIcons();
+            box.innerHTML = `<div class="col-span-2 sm:col-span-4 text-center py-8 text-sm text-slate-400 bg-white/80 rounded-3xl border border-dashed border-fuchsia-200">Категории появятся, когда админ их добавит</div>`;
             return;
         }
 
-        box.innerHTML = cats.map((c, i) => {
-            const key = c.toLowerCase().trim();
-            let icon = 'tag';
-            for (const [k, v] of Object.entries(iconMap)) {
-                if (key.includes(k) || k.includes(key)) { icon = v; break; }
-            }
-            const col = colors[i % colors.length];
+        box.innerHTML = cats.map((c) => {
+            const img = photoForCategory(c);
             const active = state.activeCategory === c;
+            const count = state.products.filter(p => p.category === c).length;
             return `
             <button type="button" data-cat="${escapeHtml(c)}"
-                class="cat-card group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-2xl border transition-all duration-200
+                class="cat-card group relative overflow-hidden rounded-2xl border-2 transition-all duration-300 text-left
                 ${active
-                    ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20 scale-[1.02]'
-                    : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5'}">
-                <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center ${active ? 'bg-white/20' : col.bg} transition-colors">
-                    <i data-lucide="${icon}" class="w-5 h-5 sm:w-6 sm:h-6 ${active ? 'text-white' : col.icon}"></i>
-                </span>
-                <span class="text-[11px] sm:text-xs font-semibold text-center leading-tight line-clamp-2 ${active ? 'text-white' : 'text-slate-700'}">${escapeHtml(c)}</span>
+                    ? 'border-fuchsia-500 shadow-xl shadow-fuchsia-500/25 scale-[1.02] ring-2 ring-fuchsia-300'
+                    : 'border-white/80 shadow-md hover:shadow-xl hover:-translate-y-1 hover:border-fuchsia-200'}">
+                <div class="aspect-[4/3] relative">
+                    <img src="${img}" alt="${escapeHtml(c)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                         onerror="this.src='https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=400&fit=crop&q=80'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3">
+                        <div class="text-white font-bold text-xs sm:text-sm leading-tight drop-shadow">${escapeHtml(c)}</div>
+                        <div class="text-white/80 text-[10px] mt-0.5">${count} товар${count === 1 ? '' : (count > 1 && count < 5 ? 'а' : 'ов')}</div>
+                    </div>
+                    ${active ? '<span class="absolute top-2 right-2 w-6 h-6 rounded-full bg-fuchsia-500 text-white flex items-center justify-center text-xs font-bold shadow-lg">✓</span>' : ''}
+                </div>
             </button>`;
         }).join('');
 
@@ -478,7 +496,6 @@
                 renderCatalog();
             });
         });
-        if (window.lucide) lucide.createIcons();
     }
 
 
@@ -488,29 +505,29 @@
         const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200`;
         const cat = p.category ? `<span class="text-[10px] font-medium text-slate-400 truncate">${escapeHtml(p.category)}</span>` : '';
         return `
-            <div class="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md hover:border-slate-300 group">
-                <div class="aspect-square bg-slate-50 relative overflow-hidden">
-                    <img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" loading="lazy"
-                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200'">
-                    <button type="button" data-fav="${p.id}" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center shadow-sm hover:scale-105 transition-transform" title="Избранное">
-                        <i data-lucide="heart" class="w-4 h-4 ${fav ? 'text-red-500 fill-red-500' : 'text-slate-400'}" style="${fav ? 'fill: currentColor' : ''}"></i>
+            <div class="bg-white border border-fuchsia-100/80 rounded-2xl overflow-hidden shadow-md shadow-violet-500/5 flex flex-col transition-all hover:shadow-xl hover:shadow-fuchsia-500/15 hover:-translate-y-1 hover:border-fuchsia-200 group">
+                <div class="aspect-square bg-gradient-to-br from-violet-50 to-orange-50 relative overflow-hidden">
+                    <img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy"
+                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f5d0fe&color=a21caf&size=200'">
+                    <button type="button" data-fav="${p.id}" class="absolute top-2 right-2 w-9 h-9 rounded-full bg-white/95 backdrop-blur border border-fuchsia-100 flex items-center justify-center shadow-md hover:scale-110 transition-transform" title="Избранное">
+                        <i data-lucide="heart" class="w-4 h-4 ${fav ? 'text-pink-500' : 'text-slate-400'}" style="${fav ? 'fill: currentColor' : ''}"></i>
                     </button>
-                    ${p.stock < 10 ? '<span class="absolute top-2 left-2 text-[10px] px-2 py-0.5 bg-red-500 text-white font-semibold rounded-md">Мало</span>' : ''}
+                    ${p.featured ? '<span class="absolute top-2 left-2 text-[10px] px-2 py-0.5 bg-gradient-to-r from-orange-400 to-pink-500 text-white font-bold rounded-md shadow">Витрина</span>' : (p.stock < 10 ? '<span class="absolute top-2 left-2 text-[10px] px-2 py-0.5 bg-rose-500 text-white font-semibold rounded-md">Мало</span>' : '')}
                 </div>
                 <div class="p-3 flex flex-col flex-1">
                     ${cat}
                     <h4 class="font-semibold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 mt-0.5">${escapeHtml(p.name)}</h4>
-                    <div class="text-red-500 font-bold text-base mb-0.5">${fmt(p.price)}</div>
+                    <div class="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-600 to-orange-500 font-extrabold text-base mb-0.5">${fmt(p.price)}</div>
                     <div class="text-[11px] text-slate-400 mb-3">В наличии: ${p.stock} шт</div>
                     <div class="mt-auto">
                         ${qty > 0 ? `
-                            <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-1">
+                            <div class="flex items-center justify-between bg-fuchsia-50 border border-fuchsia-100 rounded-xl p-1">
                                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="dec" data-id="${p.id}">−</button>
                                 <span class="font-bold text-slate-800 text-sm px-2">${qty}</span>
                                 <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="inc" data-id="${p.id}">+</button>
                             </div>
                         ` : `
-                            <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors active:scale-[0.98]" data-action="add" data-id="${p.id}">
+                            <button class="w-full py-2.5 bg-gradient-to-r from-fuchsia-500 to-violet-600 hover:from-fuchsia-600 hover:to-violet-700 text-white text-xs font-bold rounded-xl shadow-md shadow-fuchsia-500/25 transition-all active:scale-[0.98]" data-action="add" data-id="${p.id}">
                                 В корзину
                             </button>
                         `}
@@ -632,32 +649,40 @@
 
     // ========== RENDER CAROUSEL ==========
     function renderCarousel() {
-        const featured = state.products.slice(0, 5);
+        const featured = state.products.filter(p => p.featured);
         const container = $('#carouselContainer');
         const dots = $('#carouselDots');
         if (!container || !dots) return;
         
         if (featured.length === 0) {
-            container.innerHTML = `<div class="carousel-slide flex items-center justify-center text-slate-400 text-sm">Витрина товаров пуста</div>`;
+            container.innerHTML = `<div class="carousel-slide flex flex-col items-center justify-center text-slate-500 text-sm px-6 text-center bg-gradient-to-br from-violet-50 to-orange-50 w-full shrink-0">
+                <div class="text-3xl mb-2 opacity-40">★</div>
+                <p class="font-semibold text-slate-600">Витрина пуста</p>
+                <p class="text-xs text-slate-400 mt-1">Админ отмечает товары: «Показать в витрине»</p>
+            </div>`;
             dots.innerHTML = '';
             return;
         }
         
         container.innerHTML = featured.map((p) => {
-            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=400`;
+            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f5d0fe&color=a21caf&size=400`;
             return `
-            <div class="carousel-slide flex items-center justify-between px-8 py-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 w-full shrink-0">
-                <div class="max-w-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">Рекомендуемый товар</span>
-                    <h3 class="text-lg font-bold text-slate-800 mt-2 line-clamp-1">${escapeHtml(p.name)}</h3>
-                    <div class="text-xl font-extrabold text-blue-600 mt-1">${fmt(p.price)}</div>
+            <div class="carousel-slide relative flex items-center justify-between px-6 sm:px-10 py-5 w-full shrink-0 overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-fuchsia-600/90 via-violet-600/85 to-orange-500/80"></div>
+                <div class="absolute inset-0 opacity-25" style="background-image:url('${img}');background-size:cover;background-position:center;filter:blur(10px)"></div>
+                <div class="relative z-10 max-w-[55%]">
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-white/90 bg-white/20 backdrop-blur px-2.5 py-1 rounded-full border border-white/30">В витрине</span>
+                    <h3 class="text-lg sm:text-xl font-bold text-white mt-2 line-clamp-2 drop-shadow-md">${escapeHtml(p.name)}</h3>
+                    <div class="text-xl sm:text-2xl font-extrabold text-white mt-1 drop-shadow">${fmt(p.price)}</div>
+                    ${p.category ? `<div class="text-xs text-white/80 mt-1">${escapeHtml(p.category)}</div>` : ''}
                 </div>
-                <img src="${img}" alt="${escapeHtml(p.name)}" class="w-28 h-28 object-cover rounded-2xl shadow-md border-2 border-white shrink-0">
+                <img src="${img}" alt="${escapeHtml(p.name)}" class="relative z-10 w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-2xl shadow-2xl border-4 border-white/40 shrink-0"
+                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=f5d0fe&color=a21caf&size=400'">
             </div>`;
         }).join('');
         
         dots.innerHTML = featured.map((_, i) => 
-            `<button class="w-2 h-2 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-5' : 'bg-slate-300'}" data-idx="${i}"></button>`
+            `<button class="w-2.5 h-2.5 rounded-full transition-all ${i === 0 ? 'bg-white w-6' : 'bg-white/50'}" data-idx="${i}"></button>`
         ).join('');
         
         state.carouselIndex = 0;
@@ -669,6 +694,7 @@
                 updateCarousel();
             });
         });
+        if (window.lucide) lucide.createIcons();
     }
 
     function updateCarousel() {
@@ -679,11 +705,47 @@
         container.style.transform = `translateX(-${state.carouselIndex * 100}%)`;
         
         $$('#carouselDots button').forEach((btn, i) => {
-            btn.className = `w-2 h-2 rounded-full transition-all ${i === state.carouselIndex ? 'bg-blue-600 w-5' : 'bg-slate-300'}`;
+            btn.className = `w-2.5 h-2.5 rounded-full transition-all ${i === state.carouselIndex ? 'bg-white w-6 shadow' : 'bg-white/50'}`;
         });
     }
 
     // ========== RENDER ADMIN PRODUCTS & STATS ==========
+
+    function renderAdminFeaturedList() {
+        const box = $('#adminFeaturedList');
+        if (!box) return;
+        const featured = state.products.filter(p => p.featured);
+        if (!featured.length) {
+            box.innerHTML = '<p class="text-xs text-slate-400 py-2">Нет товаров в витрине. Отметьте галочку при сохранении товара.</p>';
+            return;
+        }
+        box.innerHTML = featured.map(p => `
+            <div class="flex items-center justify-between gap-2 p-2.5 bg-gradient-to-r from-fuchsia-50 to-orange-50 border border-fuchsia-100 rounded-xl">
+                <div class="flex items-center gap-2 min-w-0">
+                    <img src="${p.image || ''}" class="w-10 h-10 rounded-lg object-cover bg-white" onerror="this.style.display='none'">
+                    <div class="min-w-0">
+                        <div class="text-sm font-semibold text-slate-800 truncate">${escapeHtml(p.name)}</div>
+                        <div class="text-xs text-fuchsia-600 font-bold">${fmt(p.price)}</div>
+                    </div>
+                </div>
+                <button type="button" data-unfeat="${p.id}" class="text-xs px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:text-red-600 font-medium">Убрать</button>
+            </div>
+        `).join('');
+        box.querySelectorAll('[data-unfeat]').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const prod = state.products.find(x => x.id === btn.dataset.unfeat);
+                if (!prod) return;
+                prod.featured = false;
+                await saveProduct({ ...prod });
+                await loadProducts();
+                renderCarousel();
+                renderAdminFeaturedList();
+                renderAdminProducts();
+                toast('Убрано из витрины', 'success');
+            });
+        });
+    }
+
     function renderAdminProducts() {
         const container = $('#adminProductsList');
         if (!container) return;
@@ -1080,6 +1142,7 @@
         if ($('#prodImageUrl')) $('#prodImageUrl').value = product.image || '';
         fillCategorySelects();
         if ($('#prodCategory')) $('#prodCategory').value = product.category || '';
+        if ($('#prodFeatured')) $('#prodFeatured').checked = !!product.featured;
         
         if ($('#formTitle')) $('#formTitle').textContent = 'Редактирование товара';
         if ($('#saveProdBtn')) $('#saveProdBtn').textContent = 'Сохранить изменения';
@@ -1105,6 +1168,7 @@
     function resetProductForm() {
         if ($('#addProductForm')) $('#addProductForm').reset();
         if ($('#productId')) $('#productId').value = '';
+        if ($('#prodFeatured')) $('#prodFeatured').checked = false;
         if ($('#formTitle')) $('#formTitle').textContent = 'Добавление товара';
         if ($('#saveProdBtn')) $('#saveProdBtn').textContent = 'Сохранить товар в базе';
         if ($('#resetFormBtn')) $('#resetFormBtn').classList.add('hidden');
@@ -1291,7 +1355,7 @@
 
     function switchTab(tabId) {
         $$('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'bg-blue-600', 'text-white', 'shadow-md', 'shadow-sm');
+            btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'from-fuchsia-500', 'to-violet-600', 'bg-blue-600', 'text-white', 'shadow-md', 'shadow-sm', 'shadow-fuchsia-500/30');
             btn.classList.add('bg-white', 'text-slate-500');
         });
         $$('.tab-content').forEach(v => v.classList.add('hidden'));
@@ -1300,7 +1364,7 @@
         const view = $(`#view${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
         
         if (btn) {
-            btn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
+            btn.classList.add('active', 'bg-gradient-to-r', 'from-fuchsia-500', 'to-violet-600', 'text-white', 'shadow-md', 'shadow-fuchsia-500/30');
             btn.classList.remove('bg-white', 'text-slate-500');
         }
         if (view) view.classList.remove('hidden');
@@ -1314,6 +1378,7 @@
         }
         if (tabId === 'admin') {
             renderAdminProducts();
+            renderAdminFeaturedList();
             renderAdminCategories();
             fillCategorySelects();
             loadInvoices().then(renderAdminStats);
@@ -1579,6 +1644,7 @@
             }
             
             const category = ($('#prodCategory')?.value || '').trim() || null;
+            const featured = !!$('#prodFeatured')?.checked;
             const product = {
                 ...(id ? { id } : {}),
                 name,
@@ -1586,13 +1652,16 @@
                 costPrice,
                 stock,
                 image,
-                category
+                category,
+                featured
             };
             
             try {
                 await saveProduct(product);
                 resetProductForm();
                 await loadProducts();
+                renderCarousel();
+                renderAdminFeaturedList();
                 renderCatalog();
                 renderCarousel();
                 renderAdminProducts();
