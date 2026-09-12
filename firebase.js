@@ -18,13 +18,13 @@
 
 const USE_DEMO = false; // ← false = реальный Firebase
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCvjSjUtvq79adrJGTk7YcWRXP6aEe0yh4",
-  authDomain: "dealer-8c77e.firebaseapp.com",
-  projectId: "dealer-8c77e",
-  storageBucket: "dealer-8c77e.firebasestorage.app",
-  messagingSenderId: "185020381560",
-  appId: "1:185020381560:web:1d4619f46452e0cc80f08d"
+const firebaseConfig = { 
+  apiKey : "AIzaSyDtuYFKAudaFdVsZOQEzyVBWR_3T8TACmM" , 
+  authDomain : "smarket-7d7fc.firebaseapp.com" , 
+  projectId : "smarket-7d7fc" , 
+  storageBucket : "smarket-7d7fc.firebasestorage.app" , 
+  messagingSenderId : "309761128811" , 
+  appId : "1:309761128811:web:7a51904e46d1827f80b42e" 
 };
 
 /**
