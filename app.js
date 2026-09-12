@@ -11,12 +11,15 @@
         user: null,
         role: 'buyer', // 'buyer' | 'admin'
         products: [],
+        categories: [],   // string names
         cart: {},          // { productId: qty }
+        favorites: {},     // { productId: true }
+        activeCategory: 'all',
         invoices: [],
         carouselIndex: 0,
         searchQuery: '',
         sortBy: 'name',
-        reportPeriod: 'today', // 'today' | 'week' | 'month' | 'all' | 'custom'
+        reportPeriod: 'today',
         reportDateFrom: null,
         reportDateTo: null,
         deliveryMap: null,
@@ -34,7 +37,7 @@
         
         const el = document.createElement('div');
         const colors = {
-            info: 'bg-white border-teal-200 text-slate-700 shadow-lg shadow-teal-500/10',
+            info: 'bg-white border-blue-200 text-slate-700 shadow-lg shadow-blue-500/10',
             success: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20',
             error: 'bg-rose-500 text-white shadow-lg shadow-rose-500/20',
             warn: 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
@@ -196,7 +199,7 @@
                 $('#tabAdmin')?.classList.remove('hidden');
             } else {
                 badge.textContent = 'Покупатель';
-                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-teal-100 text-teal-700 border border-teal-200';
+                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-blue-100 text-blue-700 border border-blue-200';
                 $('#tabAdmin')?.classList.add('hidden');
             }
         }
@@ -301,6 +304,175 @@
     }
 
     // ========== RENDER CATALOG ==========
+    function loadFavorites() {
+        try {
+            const raw = localStorage.getItem('smarket_favorites');
+            state.favorites = raw ? JSON.parse(raw) : {};
+        } catch { state.favorites = {}; }
+    }
+    function saveFavorites() {
+        localStorage.setItem('smarket_favorites', JSON.stringify(state.favorites));
+        updateFavUI();
+    }
+    function toggleFavorite(productId) {
+        if (state.favorites[productId]) delete state.favorites[productId];
+        else state.favorites[productId] = true;
+        saveFavorites();
+        renderCatalog();
+        renderFavorites();
+    }
+    function updateFavUI() {
+        const n = Object.keys(state.favorites).length;
+        const el = $('#favCount');
+        if (el) {
+            el.textContent = n;
+            el.classList.toggle('hidden', n === 0);
+        }
+    }
+
+    function loadCategories() {
+        if (window.B2B && window.B2B.USE_DEMO) {
+            state.categories = window.B2B.DemoStore.get('categories', []);
+            return;
+        }
+        // derive from products + stored
+        const fromProducts = [...new Set(state.products.map(p => p.category).filter(Boolean))];
+        let stored = [];
+        try {
+            if (window.B2B && window.B2B.db) {
+                // categories live in demo or merged from products for now
+            }
+            stored = JSON.parse(localStorage.getItem('smarket_categories') || '[]');
+        } catch {}
+        state.categories = [...new Set([...stored, ...fromProducts])].sort((a,b) => a.localeCompare(b, 'ru'));
+    }
+    function persistCategories() {
+        if (window.B2B && window.B2B.USE_DEMO) {
+            window.B2B.DemoStore.set('categories', state.categories);
+        }
+        localStorage.setItem('smarket_categories', JSON.stringify(state.categories));
+        fillCategorySelects();
+        renderCategoryChips();
+        renderAdminCategories();
+    }
+    function addCategory(name) {
+        name = (name || '').trim();
+        if (!name) return toast('Введите название категории', 'warn');
+        if (state.categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+            return toast('Такая категория уже есть', 'warn');
+        }
+        state.categories.push(name);
+        state.categories.sort((a,b) => a.localeCompare(b, 'ru'));
+        persistCategories();
+        toast('Категория добавлена', 'success');
+    }
+    function removeCategory(name) {
+        state.categories = state.categories.filter(c => c !== name);
+        persistCategories();
+        toast('Категория удалена', 'success');
+    }
+    function fillCategorySelects() {
+        const sel = $('#prodCategory');
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">Без категории</option>' +
+            state.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cur) sel.value = cur;
+    }
+    function renderAdminCategories() {
+        const box = $('#adminCategoriesList');
+        if (!box) return;
+        if (!state.categories.length) {
+            box.innerHTML = '<span class="text-xs text-slate-400">Категорий пока нет</span>';
+            return;
+        }
+        box.innerHTML = state.categories.map(c => `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
+                ${escapeHtml(c)}
+                <button type="button" data-del-cat="${escapeHtml(c)}" class="text-slate-400 hover:text-red-500 font-bold leading-none">&times;</button>
+            </span>`).join('');
+        box.querySelectorAll('[data-del-cat]').forEach(btn => {
+            btn.addEventListener('click', () => removeCategory(btn.dataset.delCat));
+        });
+    }
+    function renderCategoryChips() {
+        const box = $('#categoryChips');
+        if (!box) return;
+        const all = ['all', ...state.categories];
+        box.innerHTML = all.map(c => {
+            const label = c === 'all' ? 'Все' : c;
+            const active = state.activeCategory === c;
+            return `<button type="button" data-cat="${escapeHtml(c)}"
+                class="px-3 py-1.5 rounded-full text-xs font-semibold border transition-all whitespace-nowrap ${
+                    active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
+                }">${escapeHtml(label)}</button>`;
+        }).join('');
+        box.querySelectorAll('[data-cat]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.activeCategory = btn.dataset.cat;
+                renderCategoryChips();
+                renderCatalog();
+            });
+        });
+    }
+
+    function productCardHtml(p) {
+        const qty = state.cart[p.id] || 0;
+        const fav = !!state.favorites[p.id];
+        const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200`;
+        const cat = p.category ? `<span class="text-[10px] font-medium text-slate-400 truncate">${escapeHtml(p.category)}</span>` : '';
+        return `
+            <div class="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md hover:border-slate-300 group">
+                <div class="aspect-square bg-slate-50 relative overflow-hidden">
+                    <img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" loading="lazy"
+                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200'">
+                    <button type="button" data-fav="${p.id}" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center shadow-sm hover:scale-105 transition-transform" title="Избранное">
+                        <i data-lucide="heart" class="w-4 h-4 ${fav ? 'text-red-500 fill-red-500' : 'text-slate-400'}" style="${fav ? 'fill: currentColor' : ''}"></i>
+                    </button>
+                    ${p.stock < 10 ? '<span class="absolute top-2 left-2 text-[10px] px-2 py-0.5 bg-red-500 text-white font-semibold rounded-md">Мало</span>' : ''}
+                </div>
+                <div class="p-3 flex flex-col flex-1">
+                    ${cat}
+                    <h4 class="font-semibold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 mt-0.5">${escapeHtml(p.name)}</h4>
+                    <div class="text-red-500 font-bold text-base mb-0.5">${fmt(p.price)}</div>
+                    <div class="text-[11px] text-slate-400 mb-3">В наличии: ${p.stock} шт</div>
+                    <div class="mt-auto">
+                        ${qty > 0 ? `
+                            <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-1">
+                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="dec" data-id="${p.id}">−</button>
+                                <span class="font-bold text-slate-800 text-sm px-2">${qty}</span>
+                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="inc" data-id="${p.id}">+</button>
+                            </div>
+                        ` : `
+                            <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors active:scale-[0.98]" data-action="add" data-id="${p.id}">
+                                В корзину
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function bindProductCardEvents(root) {
+        if (!root) return;
+        root.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                const action = btn.dataset.action;
+                if (action === 'add' || action === 'inc') addToCart(id, 1);
+                if (action === 'dec') addToCart(id, -1);
+            });
+        });
+        root.querySelectorAll('[data-fav]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(btn.dataset.fav);
+            });
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+
     function renderCatalog() {
         const list = $('#productList');
         const empty = $('#emptyCatalog');
@@ -308,9 +480,12 @@
 
         let items = [...state.products];
         
+        if (state.activeCategory && state.activeCategory !== 'all') {
+            items = items.filter(p => (p.category || '') === state.activeCategory);
+        }
         if (state.searchQuery) {
             const q = state.searchQuery.toLowerCase();
-            items = items.filter(p => p.name.toLowerCase().includes(q));
+            items = items.filter(p => p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q));
         }
         
         switch (state.sortBy) {
@@ -326,49 +501,23 @@
             return;
         }
         empty?.classList.add('hidden');
-        
-        list.innerHTML = items.map(p => {
-            const qty = state.cart[p.id] || 0;
-            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=ccfbf1&color=0d9488&size=200`;
-            return `
-            <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md hover:border-teal-300">
-                <div class="aspect-square bg-slate-50 relative overflow-hidden">
-                    <img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" loading="lazy"
-                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=ccfbf1&color=0d9488&size=200'">
-                    ${p.stock < 10 ? '<span class="absolute top-3 left-3 text-[10px] px-2 py-0.5 bg-rose-500 text-white font-semibold rounded-full shadow-sm">Мало на складе</span>' : ''}
-                </div>
-                <div class="p-4 flex flex-col flex-1">
-                    <h4 class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 mb-1">${escapeHtml(p.name)}</h4>
-                    <div class="text-teal-600 font-extrabold text-base mb-1">${fmt(p.price)}</div>
-                    <div class="text-xs text-slate-400 mb-4 font-medium">Остаток: ${p.stock} шт</div>
-                    <div class="mt-auto">
-                        ${qty > 0 ? `
-                            <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl p-1">
-                                <button class="w-8 h-8 flex items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm font-bold active:scale-95" data-action="dec" data-id="${p.id}">−</button>
-                                <span class="font-bold text-slate-800 text-sm px-2">${qty}</span>
-                                <button class="w-8 h-8 flex items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm font-bold active:scale-95" data-action="inc" data-id="${p.id}">+</button>
-                            </div>
-                        ` : `
-                            <button class="w-full py-2.5 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white text-xs font-semibold rounded-2xl shadow-sm transition-all active:scale-95" data-action="add" data-id="${p.id}">
-                                В корзину
-                            </button>
-                        `}
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-        
-        list.querySelectorAll('[data-action]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const id = btn.dataset.id;
-                const action = btn.dataset.action;
-                if (action === 'add' || action === 'inc') addToCart(id, 1);
-                if (action === 'dec') addToCart(id, -1);
-            });
-        });
-        
-        if (window.lucide) lucide.createIcons();
+        list.innerHTML = items.map(productCardHtml).join('');
+        bindProductCardEvents(list);
+    }
+
+    function renderFavorites() {
+        const list = $('#favoritesList');
+        const empty = $('#emptyFavorites');
+        if (!list) return;
+        const items = state.products.filter(p => state.favorites[p.id]);
+        if (items.length === 0) {
+            list.innerHTML = '';
+            empty?.classList.remove('hidden');
+            return;
+        }
+        empty?.classList.add('hidden');
+        list.innerHTML = items.map(productCardHtml).join('');
+        bindProductCardEvents(list);
     }
 
     // ========== RENDER INVOICE ==========
@@ -396,7 +545,7 @@
                     <div class="font-bold text-sm text-slate-800 truncate">${escapeHtml(p.name)}</div>
                     <div class="text-xs text-slate-400 mt-0.5">${fmt(p.price)} × ${qty} шт</div>
                 </div>
-                <div class="font-bold text-teal-600 text-sm whitespace-nowrap">${fmt(p.price * qty)}</div>
+                <div class="font-bold text-blue-600 text-sm whitespace-nowrap">${fmt(p.price * qty)}</div>
                 <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100">
                     <button class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="dec" data-id="${id}">−</button>
                     <span class="w-6 text-center text-xs font-bold">${qty}</span>
@@ -429,20 +578,20 @@
         }
         
         container.innerHTML = featured.map((p) => {
-            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=ccfbf1&color=0d9488&size=400`;
+            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=400`;
             return `
-            <div class="carousel-slide flex items-center justify-between px-8 py-4 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 w-full shrink-0">
+            <div class="carousel-slide flex items-center justify-between px-8 py-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 w-full shrink-0">
                 <div class="max-w-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-teal-700 bg-teal-100 px-2.5 py-1 rounded-full">Рекомендуемый товар</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">Рекомендуемый товар</span>
                     <h3 class="text-lg font-bold text-slate-800 mt-2 line-clamp-1">${escapeHtml(p.name)}</h3>
-                    <div class="text-xl font-extrabold text-teal-600 mt-1">${fmt(p.price)}</div>
+                    <div class="text-xl font-extrabold text-blue-600 mt-1">${fmt(p.price)}</div>
                 </div>
                 <img src="${img}" alt="${escapeHtml(p.name)}" class="w-28 h-28 object-cover rounded-2xl shadow-md border-2 border-white shrink-0">
             </div>`;
         }).join('');
         
         dots.innerHTML = featured.map((_, i) => 
-            `<button class="w-2 h-2 rounded-full transition-all ${i === 0 ? 'bg-teal-500 w-5' : 'bg-slate-300'}" data-idx="${i}"></button>`
+            `<button class="w-2 h-2 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-5' : 'bg-slate-300'}" data-idx="${i}"></button>`
         ).join('');
         
         state.carouselIndex = 0;
@@ -464,7 +613,7 @@
         container.style.transform = `translateX(-${state.carouselIndex * 100}%)`;
         
         $$('#carouselDots button').forEach((btn, i) => {
-            btn.className = `w-2 h-2 rounded-full transition-all ${i === state.carouselIndex ? 'bg-teal-500 w-5' : 'bg-slate-300'}`;
+            btn.className = `w-2 h-2 rounded-full transition-all ${i === state.carouselIndex ? 'bg-blue-600 w-5' : 'bg-slate-300'}`;
         });
     }
 
@@ -485,9 +634,8 @@
                     <div class="min-w-0">
                         <p class="font-bold text-slate-800 text-sm truncate">${escapeHtml(p.name)}</p>
                         <p class="text-xs text-slate-400 font-medium">
-                            Продажа: <span class="text-teal-600 font-bold">${fmt(p.price)}</span> 
-                            | Закуп: <span class="text-slate-600 font-semibold">${fmt(p.costPrice || 0)}</span> 
-                            | Склад: ${p.stock} шт
+                            ${p.category ? escapeHtml(p.category) + ' · ' : ''}Продажа: <span class="text-blue-600 font-bold">${fmt(p.price)}</span>
+                            · Закуп: ${fmt(p.costPrice || 0)} · Склад: ${p.stock}
                         </p>
                     </div>
                 </div>
@@ -594,7 +742,7 @@
                     <div>
                         <div class="font-bold text-slate-800 text-sm">${escapeHtml(inv.store || 'Магазин')}</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">${date} • Покупатель: ${escapeHtml(inv.userName || '—')}</div>
-                        ${inv.delivery ? `<div class="text-[11px] text-teal-600 mt-1 font-medium">📍 ${escapeHtml(inv.delivery.address || '—')}${inv.delivery.exactNote ? ' · ' + escapeHtml(inv.delivery.exactNote) : ''}${inv.delivery.lat ? ' · карта: ' + inv.delivery.lat + ',' + inv.delivery.lng : ''}</div>` : ''}
+                        ${inv.delivery ? `<div class="text-[11px] text-blue-600 mt-1 font-medium">${escapeHtml(inv.delivery.address || '—')}${inv.delivery.exactNote ? ' · ' + escapeHtml(inv.delivery.exactNote) : ''}${inv.delivery.lat ? ' · карта: ' + inv.delivery.lat + ',' + inv.delivery.lng : ''}</div>` : ''}
                         ${inv.adminNote ? `<div class="text-[11px] text-cyan-700 mt-0.5">Админ: ${escapeHtml(inv.adminNote)}</div>` : ''}
                     </div>
                     <div class="flex items-center space-x-3">
@@ -660,7 +808,7 @@
             <body>
                 <div class="header">
                     <div>
-                        <div class="title">Senimdi Sapa</div>
+                        <div class="title">S-Market</div>
                         <div style="font-size: 12px; color: #475569;">Торговая точка: <b>${escapeHtml(inv.store || 'Магазин')}</b></div>
                     </div>
                     <div style="text-align: right; font-size: 12px;">
@@ -845,6 +993,8 @@
         if ($('#prodCostPrice')) $('#prodCostPrice').value = product.costPrice || 0;
         if ($('#prodStock')) $('#prodStock').value = product.stock;
         if ($('#prodImageUrl')) $('#prodImageUrl').value = product.image || '';
+        fillCategorySelects();
+        if ($('#prodCategory')) $('#prodCategory').value = product.category || '';
         
         if ($('#formTitle')) $('#formTitle').textContent = 'Редактирование товара';
         if ($('#saveProdBtn')) $('#saveProdBtn').textContent = 'Сохранить изменения';
@@ -987,7 +1137,7 @@
 
     function switchTab(tabId) {
         $$('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-gradient-to-r', 'from-teal-500', 'to-cyan-600', 'text-white', 'shadow-md');
+            btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'bg-blue-600', 'text-white', 'shadow-md', 'shadow-sm');
             btn.classList.add('bg-white', 'text-slate-500');
         });
         $$('.tab-content').forEach(v => v.classList.add('hidden'));
@@ -996,17 +1146,22 @@
         const view = $(`#view${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
         
         if (btn) {
-            btn.classList.add('active', 'bg-gradient-to-r', 'from-teal-500', 'to-cyan-600', 'text-white', 'shadow-md');
+            btn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
             btn.classList.remove('bg-white', 'text-slate-500');
         }
         if (view) view.classList.remove('hidden');
         
+        if (tabId === 'favorites') {
+            renderFavorites();
+        }
         if (tabId === 'invoice') {
             renderInvoice();
             setTimeout(initDeliveryMap, 50);
         }
         if (tabId === 'admin') {
             renderAdminProducts();
+            renderAdminCategories();
+            fillCategorySelects();
             loadInvoices().then(renderAdminStats);
         }
         if (window.lucide) lucide.createIcons();
@@ -1022,12 +1177,19 @@
 
     // ========== INIT DATA ==========
     async function initAppData() {
+        loadFavorites();
         await loadProducts();
+        loadCategories();
         await loadInvoices();
+        fillCategorySelects();
+        renderCategoryChips();
         renderCatalog();
+        renderFavorites();
         renderCarousel();
         updateCartUI();
+        updateFavUI();
         renderAdminProducts();
+        renderAdminCategories();
         renderAdminStats();
         
         setInterval(() => {
@@ -1041,8 +1203,25 @@
     function bindEvents() {
         // Tabs
         $('#tabCatalog')?.addEventListener('click', () => switchTab('catalog'));
+        $('#tabFavorites')?.addEventListener('click', () => switchTab('favorites'));
         $('#tabInvoice')?.addEventListener('click', () => switchTab('invoice'));
         $('#tabAdmin')?.addEventListener('click', () => switchTab('admin'));
+
+        $('#addCategoryBtn')?.addEventListener('click', () => {
+            addCategory($('#newCategoryInput')?.value);
+            if ($('#newCategoryInput')) $('#newCategoryInput').value = '';
+        });
+        $('#adminAddCategoryBtn')?.addEventListener('click', () => {
+            addCategory($('#adminNewCategory')?.value);
+            if ($('#adminNewCategory')) $('#adminNewCategory').value = '';
+        });
+        $('#adminNewCategory')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCategory($('#adminNewCategory')?.value);
+                $('#adminNewCategory').value = '';
+            }
+        });
         
         // Logout
         $('#logoutBtn')?.addEventListener('click', logout);
@@ -1063,10 +1242,10 @@
         $$('.report-period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 $$('.report-period-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-teal-100', 'text-teal-700', 'border', 'border-teal-200');
+                    b.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
                     b.classList.add('bg-slate-100', 'text-slate-600');
                 });
-                btn.classList.add('active', 'bg-teal-100', 'text-teal-700', 'border', 'border-teal-200');
+                btn.classList.add('active', 'bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
                 btn.classList.remove('bg-slate-100', 'text-slate-600');
                 
                 state.reportPeriod = btn.dataset.period;
@@ -1239,13 +1418,15 @@
                 image = URL.createObjectURL(fileInput.files[0]);
             }
             
+            const category = ($('#prodCategory')?.value || '').trim() || null;
             const product = {
                 ...(id ? { id } : {}),
                 name,
                 price,
                 costPrice,
                 stock,
-                image
+                image,
+                category
             };
             
             try {

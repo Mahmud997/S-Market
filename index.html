@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Senimdi Sapa — маркетплейс и учётная система для покупателей и админов">
-    <title>Senimdi Sapa | Маркетплейс и Учёт</title>
+    <meta name="description" content="S-Market — маркетплейс и учёт: покупатель, доставка, админ">
+    <title>S-Market | Маркетплейс</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,18 +14,15 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0fdfa',
-                            100: '#ccfbf1',
-                            200: '#99f6e4',
-                            400: '#2dd4bf',
-                            500: '#14b8a6',
-                            600: '#0d9488',
-                            700: '#0f766e'
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
                         },
                         accent: {
-                            400: '#fbbf24',
-                            500: '#f59e0b',
-                            600: '#d97706'
+                            500: '#ef4444',
+                            600: '#dc2626'
                         }
                     }
                 }
@@ -48,31 +45,31 @@
     
     <link rel="stylesheet" href="./styles.css">
 </head>
-<body class="bg-slate-50 text-slate-700 min-h-screen font-sans pb-24">
+<body class="bg-[#f5f6f8] text-slate-800 min-h-screen font-sans pb-24 antialiased">
 
     <!-- Header / Navbar -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 px-6 py-4 flex justify-between items-center shadow-sm">
+    <header class="bg-white border-b border-slate-200/80 sticky top-0 z-50 px-4 sm:px-6 py-3 flex justify-between items-center shadow-sm">
         <div class="flex items-center space-x-3">
-            <div class="p-2.5 bg-gradient-to-tr from-teal-500 to-cyan-600 rounded-2xl shadow-md shadow-teal-500/25 text-white">
+            <div class="p-2 bg-blue-600 rounded-xl shadow-sm text-white">
                 <i data-lucide="store" class="w-6 h-6"></i>
             </div>
             <div>
-                <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-teal-600 to-cyan-700 bg-clip-text text-transparent">Senimdi Sapa</span>
-                <span class="block text-[11px] text-slate-400 font-medium -mt-0.5">Маркетплейс • Покупатель и Админ</span>
+                <span class="font-bold text-xl tracking-tight text-slate-900">S-Market</span>
+                <span class="block text-[11px] text-slate-400 font-medium -mt-0.5">Маркетплейс</span>
             </div>
         </div>
         <div id="userInfo" class="hidden flex items-center space-x-3">
-            <span id="userRoleBadge" class="text-xs px-3 py-1 rounded-full font-semibold bg-teal-100 text-teal-700 border border-teal-200">Покупатель</span>
-            <button id="logoutBtn" class="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all" title="Выйти">
+            <span id="userRoleBadge" class="text-xs px-3 py-1 rounded-full font-semibold bg-slate-100 text-slate-600 border border-slate-200">Покупатель</span>
+            <button id="logoutBtn" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Выйти">
                 <i data-lucide="log-out" class="w-5 h-5"></i>
             </button>
         </div>
     </header>
 
     <!-- AUTH SCREEN -->
-    <div id="authScreen" class="max-w-md mx-auto mt-14 p-8 bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl shadow-xl shadow-slate-200/60">
+    <div id="authScreen" class="max-w-md mx-auto mt-14 p-8 bg-white/90 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl shadow-slate-200/60">
         <div class="text-center mb-6">
-            <div class="inline-flex p-4 bg-teal-50 rounded-2xl mb-3 text-teal-600 border border-teal-100">
+            <div class="inline-flex p-4 bg-blue-50 rounded-2xl mb-3 text-blue-600 border border-blue-100">
                 <i data-lucide="lock" class="w-8 h-8"></i>
             </div>
             <h2 class="text-2xl font-bold text-slate-800">Вход в систему</h2>
@@ -98,16 +95,16 @@
             
             <div id="phoneAuthContainer">
                 <input type="tel" id="phoneNumber" placeholder="+7 (700) 000-00-00" 
-                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl mb-3 focus:outline-none focus:border-teal-500 focus:bg-white transition-all text-slate-800"
+                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl mb-3 focus:outline-none focus:border-blue-500 focus:bg-white transition-all text-slate-800"
                        autocomplete="tel">
-                <button id="sendOtpBtn" class="w-full py-3.5 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold rounded-2xl shadow-md shadow-teal-500/25 transition-all active:scale-[0.98]">
+                <button id="sendOtpBtn" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl shadow-md shadow-blue-600/20 transition-all active:scale-[0.98]">
                     Получить SMS код
                 </button>
             </div>
             
             <div id="otpContainer" class="hidden space-y-3">
                 <input type="text" id="otpCode" placeholder="Код из SMS" maxlength="6"
-                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg tracking-widest focus:outline-none focus:border-teal-500">
+                       class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg tracking-widest focus:outline-none focus:border-blue-500">
                 <button id="verifyOtpBtn" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl shadow-md transition-all">
                     Подтвердить
                 </button>
@@ -127,11 +124,11 @@
         
         <!-- CAROUSEL (Витрина новинок) -->
         <section class="mb-8">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-teal-600/80 mb-3 flex items-center space-x-2">
-                <i data-lucide="sparkles" class="w-4 h-4 text-teal-500"></i>
-                <span>Витрина новинок</span>
+            <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center space-x-2">
+                <i data-lucide="flame" class="w-4 h-4 text-orange-500"></i>
+                <span>Популярное</span>
             </h3>
-            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-500 via-cyan-500 to-sky-500 p-0.5 shadow-lg shadow-teal-500/15 h-48">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-0.5 shadow-lg shadow-blue-600/15 h-48">
                 <div class="w-full h-full bg-white rounded-[22px] overflow-hidden relative">
                     <div id="carouselContainer" class="flex transition-transform duration-500 ease-out h-full">
                         <!-- Dynamically injected slides -->
@@ -148,58 +145,77 @@
         </section>
 
         <!-- NAVIGATION TABS -->
-        <div class="flex space-x-2 border-b border-slate-200 pb-3 mb-6 overflow-x-auto scrollbar-hide">
-            <button id="tabCatalog" class="tab-btn active px-5 py-2.5 rounded-2xl text-sm font-semibold flex items-center space-x-2 bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-md shadow-teal-500/25 whitespace-nowrap">
-                <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        <div class="flex space-x-2 border-b border-slate-200 pb-3 mb-5 overflow-x-auto scrollbar-hide">
+            <button id="tabCatalog" class="tab-btn active px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 bg-blue-600 text-white shadow-sm whitespace-nowrap">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i>
                 <span>Каталог</span>
             </button>
-            <button id="tabInvoice" class="tab-btn px-5 py-2.5 rounded-2xl text-sm font-semibold flex items-center space-x-2 bg-white text-slate-500 hover:text-teal-600 border border-slate-200 whitespace-nowrap transition-all">
-                <i data-lucide="shopping-cart" class="w-4 h-4"></i>
-                <span>Корзина / Заказ</span>
-                <span id="cartCount" class="bg-teal-100 text-teal-700 text-xs px-2.5 py-0.5 rounded-full font-bold ml-1">0</span>
+            <button id="tabFavorites" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 bg-white text-slate-500 hover:text-blue-600 border border-slate-200 whitespace-nowrap transition-all">
+                <i data-lucide="heart" class="w-4 h-4"></i>
+                <span>Избранное</span>
+                <span id="favCount" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold ml-0.5 hidden">0</span>
             </button>
-            <button id="tabAdmin" class="tab-btn hidden px-5 py-2.5 rounded-2xl text-sm font-semibold flex items-center space-x-2 bg-white text-slate-500 hover:text-teal-600 border border-slate-200 whitespace-nowrap transition-all">
-                <i data-lucide="shield-check" class="w-4 h-4"></i>
-                <span>Панель Управления</span>
+            <button id="tabInvoice" class="tab-btn px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 bg-white text-slate-500 hover:text-blue-600 border border-slate-200 whitespace-nowrap transition-all">
+                <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+                <span>Корзина</span>
+                <span id="cartCount" class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold ml-0.5">0</span>
+            </button>
+            <button id="tabAdmin" class="tab-btn hidden px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 bg-white text-slate-500 hover:text-blue-600 border border-slate-200 whitespace-nowrap transition-all">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+                <span>Админ</span>
             </button>
         </div>
 
         <!-- TAB CONTENT: CATALOG -->
         <div id="viewCatalog" class="tab-content">
-            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+            <div class="flex flex-col sm:flex-row gap-3 mb-4">
                 <div class="relative flex-1">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="search" id="searchInput" placeholder="Поиск по наименованию..." 
-                           class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/80 rounded-2xl focus:outline-none focus:border-teal-500 text-sm shadow-sm transition-all">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="search" id="searchInput" placeholder="Поиск товаров..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-sm transition-all">
                 </div>
-                <select id="sortSelect" class="px-4 py-3 bg-white border border-slate-200/80 rounded-2xl text-sm focus:outline-none focus:border-teal-500 shadow-sm text-slate-600">
+                <select id="sortSelect" class="px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 text-slate-600">
                     <option value="name">По названию</option>
-                    <option value="price-asc">Цена: по возрастанию</option>
-                    <option value="price-desc">Цена: по убыванию</option>
-                    <option value="stock">По остатку на складе</option>
+                    <option value="price-asc">Цена: дешевле</option>
+                    <option value="price-desc">Цена: дороже</option>
+                    <option value="stock">По наличию</option>
                 </select>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5" id="productList">
+            <div id="categoryChips" class="flex flex-wrap gap-2 mb-5">
+                <!-- category filters -->
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" id="productList">
                 <!-- Dynamic products -->
             </div>
-            <div id="emptyCatalog" class="hidden text-center py-16 text-slate-400 bg-white/60 rounded-3xl border border-slate-200">
-                <i data-lucide="package-open" class="w-12 h-12 mx-auto mb-3 text-teal-300"></i>
+            <div id="emptyCatalog" class="hidden text-center py-16 text-slate-400 bg-white/60 rounded-2xl border border-slate-200">
+                <i data-lucide="package-open" class="w-12 h-12 mx-auto mb-3 text-blue-300"></i>
                 <p class="font-medium">Товары не найдены</p>
             </div>
         </div>
 
+
+        <!-- TAB CONTENT: FAVORITES -->
+        <div id="viewFavorites" class="tab-content hidden">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4" id="favoritesList">
+            </div>
+            <div id="emptyFavorites" class="hidden text-center py-16 text-slate-400 bg-white rounded-2xl border border-slate-200">
+                <i data-lucide="heart" class="w-12 h-12 mx-auto mb-3 text-slate-300"></i>
+                <p class="font-medium text-slate-600">В избранном пока пусто</p>
+                <p class="text-sm mt-1">Нажмите на сердечко на карточке товара</p>
+            </div>
+        </div>
         <!-- TAB CONTENT: INVOICE / ORDER (Покупатель — как OLX / Kaspi) -->
         <div id="viewInvoice" class="tab-content hidden">
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <h3 class="text-lg font-bold mb-5 flex items-center space-x-2 text-slate-800">
-                    <i data-lucide="shopping-cart" class="w-5 h-5 text-teal-500"></i>
+                    <i data-lucide="shopping-cart" class="w-5 h-5 text-blue-500"></i>
                     <span>Оформление заказа</span>
                 </h3>
                 
                 <!-- Сохраняем выбор точки (для совместимости) + доставка -->
                 <div class="mb-5">
                     <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Способ получения / точка:</label>
-                    <select id="selectStore" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-teal-500">
+                    <select id="selectStore" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-blue-500">
                         <option value="">-- Выберите --</option>
                         <option value="Доставка курьером">Доставка курьером</option>
                         <option value="Самовывоз — Магазин №1 (Абай)">Самовывоз — Магазин №1 (Абай)</option>
@@ -210,22 +226,22 @@
                 </div>
 
                 <!-- Блок доставки и адреса (для покупателя) -->
-                <div id="deliveryBlock" class="mb-6 p-4 bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-100 rounded-2xl space-y-4">
+                <div id="deliveryBlock" class="mb-6 p-4 bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 rounded-2xl space-y-4">
                     <h4 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
-                        <i data-lucide="map-pin" class="w-4 h-4 text-teal-500"></i>
+                        <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
                         <span>Адрес доставки</span>
                     </h4>
                     
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5">Адрес (улица, дом, квартира)</label>
                         <input type="text" id="deliveryAddress" placeholder="Например: ул. Абая 150, кв. 12"
-                               class="w-full p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-teal-500 text-sm">
+                               class="w-full p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-blue-500 text-sm">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1.5">Точное место / ориентир (напишет покупатель или уточнит админ)</label>
                         <textarea id="deliveryExactNote" rows="2" placeholder="Подъезд слева, код 1234, 3 этаж..."
-                                  class="w-full p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-teal-500 text-sm resize-none"></textarea>
+                                  class="w-full p-3.5 bg-white border border-slate-200 rounded-2xl text-slate-700 focus:outline-none focus:border-blue-500 text-sm resize-none"></textarea>
                     </div>
                     
                     <div>
@@ -237,7 +253,7 @@
                     </div>
                     
                     <div class="flex items-center gap-2 text-xs text-slate-500">
-                        <i data-lucide="info" class="w-3.5 h-3.5 text-teal-400"></i>
+                        <i data-lucide="info" class="w-3.5 h-3.5 text-blue-400"></i>
                         <span>Админ может уточнить и дополнить точный адрес в панели управления.</span>
                     </div>
                 </div>
@@ -252,7 +268,7 @@
 
                 <div class="flex justify-between items-center py-4 border-t border-slate-100 text-lg font-bold text-slate-800 mt-4">
                     <span>Итого к оплате:</span>
-                    <span id="invoiceTotal" class="text-teal-600 text-xl">0 ₸</span>
+                    <span id="invoiceTotal" class="text-blue-600 text-xl">0 ₸</span>
                 </div>
 
                 <button id="submitInvoiceBtn" class="w-full py-4 mt-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-semibold rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]">
@@ -263,16 +279,31 @@
         </div>
 
         <!-- TAB CONTENT: ADMIN PANEL -->
-        <div id="viewAdmin" class="tab-content hidden space-y-8">
+        <div id="viewAdmin" class="tab-content hidden space-y-6">
+            <!-- Категории -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+                <h3 class="text-base font-bold flex items-center space-x-2 text-slate-800 mb-3">
+                    <i data-lucide="tags" class="w-5 h-5 text-blue-500"></i>
+                    <span>Категории товаров</span>
+                </h3>
+                <p class="text-xs text-slate-400 mb-3">Админ создаёт названия категорий. Покупатель фильтрует по ним в каталоге.</p>
+                <div id="adminCategoriesList" class="flex flex-wrap gap-2 mb-3"></div>
+                <div class="flex gap-2">
+                    <input type="text" id="adminNewCategory" placeholder="Название категории (например: Напитки)" 
+                           class="flex-1 p-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500">
+                    <button type="button" id="adminAddCategoryBtn" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl">Добавить</button>
+                </div>
+            </div>
+
             
             <!-- Форма Добавления / Редактирования товара -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <div class="flex justify-between items-center mb-5">
                     <h3 class="text-lg font-bold flex items-center space-x-2 text-slate-800">
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-teal-500"></i>
+                        <i data-lucide="plus-circle" class="w-5 h-5 text-blue-500"></i>
                         <span id="formTitle">Добавление товара</span>
                     </h3>
-                    <button type="button" id="resetFormBtn" onclick="resetProductForm()" class="hidden text-xs text-slate-400 hover:text-teal-600 flex items-center space-x-1">
+                    <button type="button" id="resetFormBtn" onclick="resetProductForm()" class="hidden text-xs text-slate-400 hover:text-blue-600 flex items-center space-x-1">
                         <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                         <span>Сбросить редактирование</span>
                     </button>
@@ -284,31 +315,43 @@
                     <div class="md:col-span-2">
                         <label class="block text-xs text-slate-400 mb-1">Наименование товара</label>
                         <input type="text" id="prodName" placeholder="Например: Чай CAMEL Karak" 
-                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-teal-500" required>
+                               class="w-full p-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500" required>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-xs text-slate-400 mb-1">Категория</label>
+                        <div class="flex gap-2">
+                            <select id="prodCategory" class="flex-1 p-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm">
+                                <option value="">Без категории</option>
+                            </select>
+                            <input type="text" id="newCategoryInput" placeholder="Новая категория" 
+                                   class="w-40 sm:w-48 p-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm">
+                            <button type="button" id="addCategoryBtn" class="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl whitespace-nowrap">+ Категория</button>
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Продажная цена (₸)</label>
                         <input type="number" id="prodPrice" placeholder="0" min="0" step="1"
-                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-teal-500" required>
+                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500" required>
                     </div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Закупочная цена (₸)</label>
                         <input type="number" id="prodCostPrice" placeholder="0" min="0" step="1"
-                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-teal-500">
+                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500">
                     </div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Остаток на складе (шт)</label>
                         <input type="number" id="prodStock" placeholder="0" min="0"
-                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-teal-500" required>
+                               class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-blue-500" required>
                     </div>
 
                     <div>
                         <label class="block text-xs text-slate-400 mb-1">Изображение товара</label>
                         <div class="flex items-center space-x-2">
-                            <input type="url" id="prodImageUrl" placeholder="Ссылка на фото (URL)" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-teal-500">
+                            <input type="url" id="prodImageUrl" placeholder="Ссылка на фото (URL)" class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:border-blue-500">
                             <label class="px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-2xl cursor-pointer hover:bg-slate-200 text-slate-600 text-sm transition-colors flex items-center shrink-0">
                                 <i data-lucide="upload" class="w-4 h-4"></i>
                                 <input type="file" id="prodImage" accept="image/*" class="hidden">
@@ -316,18 +359,18 @@
                         </div>
                     </div>
 
-                    <button type="submit" id="saveProdBtn" class="md:col-span-2 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold rounded-2xl shadow-md shadow-teal-500/25 transition-all active:scale-[0.98]">
+                    <button type="submit" id="saveProdBtn" class="md:col-span-2 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-2xl shadow-md shadow-blue-600/20 transition-all active:scale-[0.98]">
                         Сохранить товар в базе
                     </button>
                 </form>
             </div>
 
             <!-- Массовый Импорт Товаров -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <div>
                         <h3 class="text-lg font-bold flex items-center space-x-2 text-slate-800">
-                            <i data-lucide="file-up" class="w-5 h-5 text-cyan-600"></i>
+                            <i data-lucide="file-up" class="w-5 h-5 text-blue-600"></i>
                             <span>Массовый импорт товаров</span>
                         </h3>
                         <p class="text-xs text-slate-400 mt-0.5">Загрузите каталог списком из файла CSV или JSON</p>
@@ -341,7 +384,7 @@
                 <div class="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-center">
                     <input type="file" id="importFileInput" accept=".csv, .json" class="hidden">
                     <label for="importFileInput" class="cursor-pointer flex flex-col items-center justify-center space-y-2 py-2">
-                        <div class="p-3 bg-white rounded-2xl border border-slate-200 text-cyan-600 shadow-sm">
+                        <div class="p-3 bg-white rounded-2xl border border-slate-200 text-blue-600 shadow-sm">
                             <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
                         </div>
                         <span class="text-sm font-semibold text-slate-700">Нажмите для выбора CSV/JSON файла</span>
@@ -351,9 +394,9 @@
             </div>
 
             <!-- Список товаров (Управление: Изменение и Удаление) -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <h3 class="text-lg font-bold mb-4 flex items-center space-x-2 text-slate-800">
-                    <i data-lucide="boxes" class="w-5 h-5 text-teal-500"></i>
+                    <i data-lucide="boxes" class="w-5 h-5 text-blue-500"></i>
                     <span>Список товаров в базе</span>
                 </h3>
                 <div id="adminProductsList" class="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -362,10 +405,10 @@
             </div>
 
             <!-- Отчетность по периодам -->
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <h3 class="text-lg font-bold flex items-center space-x-2 text-slate-800">
-                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-teal-500"></i>
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-500"></i>
                         <span>Отчеты и аналитика продаж</span>
                     </h3>
                     <button id="printReportBtn" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs flex items-center space-x-1.5 shadow-sm transition-colors self-start sm:self-auto">
@@ -376,7 +419,7 @@
 
                 <!-- Переключатель периодов -->
                 <div class="flex flex-wrap gap-2 mb-6">
-                    <button class="report-period-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-teal-100 text-teal-700 border border-teal-200" data-period="today">За сегодня</button>
+                    <button class="report-period-btn active px-4 py-2 rounded-xl text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200" data-period="today">За сегодня</button>
                     <button class="report-period-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200" data-period="week">За 7 дней</button>
                     <button class="report-period-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200" data-period="month">За этот месяц</button>
                     <button class="report-period-btn px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200" data-period="all">За всё время</button>
@@ -396,7 +439,7 @@
 
                 <!-- Карточки со статистикой -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
+                    <div class="p-4 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-100">
                         <span class="text-xs font-semibold text-emerald-600">Выручка (Оборот)</span>
                         <div id="statRevenue" class="text-xl font-bold text-emerald-700 mt-1">0 ₸</div>
                     </div>
@@ -404,9 +447,9 @@
                         <span class="text-xs font-semibold text-slate-600">Себестоимость</span>
                         <div id="statCost" class="text-xl font-bold text-slate-700 mt-1">0 ₸</div>
                     </div>
-                    <div class="p-4 bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl border border-cyan-100">
-                        <span class="text-xs font-semibold text-cyan-600">Чистая прибыль</span>
-                        <div id="statProfit" class="text-xl font-bold text-cyan-700 mt-1">0 ₸</div>
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                        <span class="text-xs font-semibold text-blue-600">Чистая прибыль</span>
+                        <div id="statProfit" class="text-xl font-bold text-blue-700 mt-1">0 ₸</div>
                     </div>
                     <div class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl border border-amber-100">
                         <span class="text-xs font-semibold text-amber-600">Маржа / Наценка</span>
