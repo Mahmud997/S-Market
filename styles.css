@@ -1,130 +1,26 @@
-/* Custom styles for B2B Trade */
+*{box-sizing:border-box}
+:root{--sm-blue:#2563eb;--sm-blue-dark:#1d4ed8;--sm-ink:#0f172a;--sm-muted:#64748b;--sm-bg:#f4f7fb;--sm-line:#e7ebf2}
+body{background:var(--sm-bg);color:#172033}
+.marketplace-card{border-radius:18px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.marketplace-card:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(15,23,42,.10);border-color:#cbd5e1}.category-chip{transition:.18s ease}
+button{transition:transform .15s ease,background-color .15s ease,border-color .15s ease}button:active{transform:scale(.98)}
+:focus-visible{outline:3px solid rgba(37,99,235,.22);outline-offset:2px}
+.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+#deliveryMap,#adminMap{min-height:240px;z-index:1}.leaflet-container{font-family:inherit}
+.tab-content{animation:fadeIn .2s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.toast-enter{animation:toast-in .25s ease forwards}@keyframes toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-/* Hide scrollbar for tabs on mobile */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-.scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-}
-
-/* Product card hover */
-.product-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.product-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgb(13 148 136 / 0.18);
-}
-
-/* Quantity controls */
-.qty-btn {
-    transition: background-color 0.15s;
-}
-.qty-btn:active {
-    transform: scale(0.92);
-}
-
-/* Toast animation */
-@keyframes toast-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-@keyframes toast-out {
-    from {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(10px) scale(0.95);
-    }
-}
-.toast-enter {
-    animation: toast-in 0.3s ease forwards;
-}
-.toast-exit {
-    animation: toast-out 0.25s ease forwards;
-}
-
-/* Carousel slide */
-.carousel-slide {
-    min-width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-}
-.carousel-slide::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 60%);
-}
-
-/* Loading skeleton */
-.skeleton {
-    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-}
-@keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-/* Focus visible for a11y */
-:focus-visible {
-    outline: 2px solid #0d9488;
-    outline-offset: 2px;
-}
-
-/* Smooth tab transitions */
-.tab-content {
-    animation: fadeIn 0.25s ease;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Image preview in form */
-#fileLabel.has-file {
-    color: #5eead4;
-    border-color: #0d9488;
-}
-
-
-/* Delivery map */
-#deliveryMap {
-    min-height: 220px;
-}
-#deliveryMap .leaflet-container {
-    font-family: inherit;
-    border-radius: 1rem;
-}
-
-/* Kaspi/OLX-like product card polish */
-.product-card {
-    border-radius: 1.25rem;
-}
-
-/* S-Market modern marketplace */
-body { -webkit-font-smoothing: antialiased; }
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-#categoryChips button { user-select: none; }
+/* S-Market modern marketplace category block */
+.category-section{background:transparent}
+.section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:14px}
+.section-heading h2{margin:0;font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-.02em;color:var(--sm-ink)}
+.section-heading p{margin:5px 0 0;font-size:12px;color:#94a3b8}
+.section-link{border:0;background:transparent;color:var(--sm-blue);font-size:14px;font-weight:700;padding:7px 0;cursor:pointer}.section-link span{font-size:17px;margin-left:2px}
+.category-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}
+.category-card{position:relative;min-height:112px;padding:16px 8px 13px;border:1px solid rgba(226,232,240,.9);border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 5px 18px rgba(15,23,42,.045);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;overflow:hidden}
+.category-card:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(37,99,235,.04),transparent 70%);opacity:0;transition:.2s}
+.category-card:hover{transform:translateY(-3px);border-color:#bfdbfe;box-shadow:0 12px 28px rgba(37,99,235,.10)}.category-card:hover:before,.category-card.active:before{opacity:1}
+.category-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#eff6ff;color:var(--sm-blue);margin-bottom:9px;position:relative;z-index:1}.category-icon svg{width:25px;height:25px;stroke-width:2.4}
+.category-name{font-size:12px;font-weight:700;color:#334155;line-height:1.2;max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;position:relative;z-index:1}
+.category-card.active{border-color:#93c5fd;box-shadow:0 12px 30px rgba(37,99,235,.12)}.category-card.active .category-icon{background:#2563eb;color:#fff}.category-card.active .category-name{color:#1d4ed8}
+@media(max-width:1024px){.category-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:560px){.category-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.category-card{min-height:96px;padding:11px 5px;border-radius:15px}.category-icon{width:40px;height:40px;border-radius:12px;margin-bottom:7px}.category-icon svg{width:21px;height:21px}.category-name{font-size:11px}.section-heading h2{font-size:20px}.section-heading p{display:none}}
