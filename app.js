@@ -11,22 +11,19 @@
         user: null,
         role: 'buyer', // 'buyer' | 'admin'
         products: [],
+        categories: [],   // string names
         cart: {},          // { productId: qty }
+        favorites: {},     // { productId: true }
+        activeCategory: 'all',
         invoices: [],
         carouselIndex: 0,
         searchQuery: '',
         sortBy: 'name',
-        category: 'all',
-        favorites: JSON.parse(localStorage.getItem('smarket_favorites') || '[]'),
-        categories: [],
-        reportPeriod: 'today', // 'today' | 'week' | 'month' | 'all' | 'custom'
+        reportPeriod: 'today',
         reportDateFrom: null,
         reportDateTo: null,
-        shopSettings: { name: 'S-Market', address: '', deliveryPrice: 500, freeDeliveryFrom: 10000, notice: '', lat: 43.2627, lng: 76.9345 },
         deliveryMap: null,
-        adminMap: null,
-        deliveryMarker: null,
-        adminMarker: null
+        deliveryMarker: null
     };
 
     // ========== DOM REFS ==========
@@ -40,7 +37,7 @@
         
         const el = document.createElement('div');
         const colors = {
-            info: 'bg-white border-pink-200 text-slate-700 shadow-lg shadow-pink-500/5',
+            info: 'bg-white border-blue-200 text-slate-700 shadow-lg shadow-blue-500/10',
             success: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20',
             error: 'bg-rose-500 text-white shadow-lg shadow-rose-500/20',
             warn: 'bg-amber-500 text-white shadow-lg shadow-amber-500/20'
@@ -58,110 +55,6 @@
 
     // ========== FORMAT ==========
     const fmt = (n) => new Intl.NumberFormat('ru-RU').format(n || 0) + ' ₸';
-
-    // ========== CATEGORIES & FAVORITES ==========
-    async function loadCategories() {
-        const fallback = ['Такси', 'Мастера', 'Скот / Агро', 'Авто', 'Жильё', 'Одежда', 'Техника', 'Еда / Кафе'];
-        try {
-            if (window.B2B?.USE_DEMO) state.categories = window.B2B.DemoStore.get('categories', fallback);
-            else {
-                const db = window.db || window.B2B?.db || firebase.firestore();
-                const snap = await db.collection('settings').doc('shop').get();
-                state.categories = snap.exists && Array.isArray(snap.data().categories) ? snap.data().categories : fallback;
-            }
-        } catch { state.categories = fallback; }
-        renderCategoryControls();
-    }
-    async function saveCategories() {
-        if (window.B2B?.USE_DEMO) window.B2B.DemoStore.set('categories', state.categories);
-        else await (window.db || window.B2B?.db || firebase.firestore()).collection('settings').doc('shop').set({ categories: state.categories }, { merge: true });
-        renderCategoryControls();
-    }
-    function categoryIcon(name) {
-        const n = String(name || '').toLowerCase();
-        if (/такси|транспорт|достав/.test(n)) return 'car-front';
-        if (/мастер|услуг|ремонт|стро|электрик|сантех/.test(n)) return 'wrench';
-        if (/скот|агро|ферм|живот/.test(n)) return 'tractor';
-        if (/авто|машин|запчаст/.test(n)) return 'car';
-        if (/жиль|кварт|дом|недвиж/.test(n)) return 'house';
-        if (/одеж|обув|мод|аксесс/.test(n)) return 'shirt';
-        if (/техник|телефон|смартф|компьют|электрон/.test(n)) return 'smartphone';
-        if (/еда|кафе|ресторан|продукт|напит/.test(n)) return 'utensils';
-        if (/красот|космет|здоров/.test(n)) return 'sparkles';
-        if (/мебел/.test(n)) return 'armchair';
-        if (/дет|игр|ребен/.test(n)) return 'baby';
-        if (/работ|ваканс/.test(n)) return 'briefcase-business';
-        if (/услуг/.test(n)) return 'hand-helping';
-        return 'shopping-bag';
-    }
-
-    function renderCategoryGrid() {
-        const grid = $('#categoryGrid');
-        if (!grid) return;
-        const visible = state.categories.slice(0, 7);
-        const all = [{ name: 'Все', value: 'all', icon: 'grid-2x2' }, ...visible.map(c => ({ name: c, value: c, icon: categoryIcon(c) }))];
-        grid.innerHTML = all.map(c => {
-            const active = state.category === c.value;
-            return `<button type="button" class="category-card ${active ? 'active' : ''}" data-show-category="${escapeHtml(c.value)}" aria-label="${escapeHtml(c.name)}">
-                <span class="category-icon"><i data-lucide="${c.icon}"></i></span>
-                <span class="category-name">${escapeHtml(c.name)}</span>
-            </button>`;
-        }).join('');
-        grid.querySelectorAll('[data-show-category]').forEach(btn => btn.addEventListener('click', () => {
-            state.category = btn.dataset.showCategory;
-            renderCategoryControls();
-            renderCatalog();
-            document.getElementById('viewCatalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }));
-        if (window.lucide) lucide.createIcons();
-    }
-
-    document.addEventListener('click', (e) => {
-        if (e.target.closest('#allCategoriesBtn')) {
-            state.category = 'all';
-            renderCategoryControls();
-            renderCatalog();
-            document.getElementById('viewCatalog')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    });
-
-    function renderCategoryControls() {
-        const chips = $('#categoryChips');
-        if (chips) chips.innerHTML = ['all', ...state.categories].map(c => {
-            const label = c === 'all' ? 'Все' : c;
-            const active = state.category === c;
-            return `<button class="category-chip px-4 py-2 rounded-full text-xs font-semibold border ${active ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}" data-category="${escapeHtml(c)}">${escapeHtml(label)}</button>`;
-        }).join('');
-        chips?.querySelectorAll('[data-category]').forEach(b => b.addEventListener('click', () => { state.category=b.dataset.category; renderCategoryControls(); renderCatalog(); }));
-        renderCategoryGrid();
-        const select = $('#prodCategory');
-        if (select) { const current=select.value; select.innerHTML='<option value="">Без категории</option>'+state.categories.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join(''); select.value=current; }
-        const admin = $('#adminCategoriesList');
-        if (admin) admin.innerHTML = state.categories.map(c => `<span class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"><span>${escapeHtml(c)}</span><button data-remove-category="${escapeHtml(c)}" class="text-slate-400 hover:text-rose-500">×</button></span>`).join('');
-        admin?.querySelectorAll('[data-remove-category]').forEach(b=>b.addEventListener('click', async()=>{ const c=b.dataset.removeCategory; state.categories=state.categories.filter(x=>x!==c); state.products.forEach(p=>{if(p.category===c)p.category='';}); await saveCategories(); renderCatalog(); renderAdminProducts(); }));
-    }
-    function toggleFavorite(id) {
-        const set = new Set(state.favorites);
-        set.has(id) ? set.delete(id) : set.add(id);
-        state.favorites = [...set]; localStorage.setItem('smarket_favorites', JSON.stringify(state.favorites));
-        renderCatalog(); renderFavorites();
-    }
-    function renderFavorites() {
-        const list=$('#favoriteList'), empty=$('#emptyFavorites'); if(!list)return;
-        const items=state.products.filter(p=>state.favorites.includes(p.id));
-        empty?.classList.toggle('hidden', items.length>0);
-        list.innerHTML=items.map(p=>productCard(p)).join(''); bindProductActions(list);
-    }
-    function productCard(p) {
-        const qty=state.cart[p.id]||0, fav=state.favorites.includes(p.id);
-        const img=p.image||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=eff6ff&color=2563eb&size=200`;
-        return `<div class="marketplace-card bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
-          <div class="aspect-square bg-slate-50 relative overflow-hidden"><img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" loading="lazy" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=eff6ff&color=2563eb&size=200'">
-          <button class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 shadow flex items-center justify-center ${fav?'text-rose-500':'text-slate-400'}" data-action="fav" data-id="${p.id}" aria-label="Избранное"><i data-lucide="heart" class="w-4 h-4 ${fav?'fill-current':''}"></i></button>
-          ${p.category?`<span class="absolute left-3 bottom-3 px-2.5 py-1 rounded-full bg-white/90 text-[10px] font-semibold text-slate-600">${escapeHtml(p.category)}</span>`:''}</div>
-          <div class="p-4 flex flex-col flex-1"><h4 class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 mb-2">${escapeHtml(p.name)}</h4><div class="text-blue-600 font-extrabold text-lg">${fmt(p.price)}</div><div class="text-xs text-slate-400 mt-1 mb-4">В наличии: ${p.stock} шт.</div><div class="mt-auto">${qty>0?`<div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-2xl p-1"><button class="w-8 h-8 rounded-xl bg-white shadow font-bold" data-action="dec" data-id="${p.id}">−</button><span class="font-bold text-sm">${qty}</span><button class="w-8 h-8 rounded-xl bg-white shadow font-bold" data-action="inc" data-id="${p.id}">+</button></div>`:`<button class="w-full py-3 bg-slate-900 hover:bg-blue-700 text-white text-xs font-semibold rounded-2xl" data-action="add" data-id="${p.id}">В корзину</button>`}</div></div></div>`;
-    }
-    function bindProductActions(list) { list.querySelectorAll('[data-action]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const a=btn.dataset.action,id=btn.dataset.id;if(a==='fav')toggleFavorite(id);if(a==='add'||a==='inc')addToCart(id,1);if(a==='dec')addToCart(id,-1);})); if(window.lucide)lucide.createIcons(); }
 
     // ========== DATA LAYER ==========
     async function loadProducts() {
@@ -229,9 +122,7 @@
         }
         try {
             const db = window.db || (window.B2B && window.B2B.db) || firebase.firestore();
-            let query = db.collection('invoices');
-            if (state.role !== 'admin' && state.user?.uid) query = query.where('userId', '==', state.user.uid);
-            const snap = await query.orderBy('createdAt', 'desc').limit(100).get();
+            const snap = await db.collection('invoices').orderBy('createdAt', 'desc').limit(100).get();
             state.invoices = snap.docs.map(d => {
                 const data = d.data();
                 return {
@@ -292,108 +183,6 @@
         return invoice;
     }
 
-    // ========== SHOP / DELIVERY SETTINGS ==========
-    async function loadShopSettings() {
-        const fallback = { name: 'S-Market', address: '', deliveryPrice: 500, freeDeliveryFrom: 10000, notice: '', lat: 43.2627, lng: 76.9345, categories: ['Все товары'] };
-        if (window.B2B && window.B2B.USE_DEMO) {
-            state.shopSettings = { ...fallback, ...(window.B2B.DemoStore.get('shopSettings', {}) || {}) };
-            return;
-        }
-        try {
-            const db = window.B2B?.db || window.db;
-            if (!db) { state.shopSettings = fallback; return; }
-            const snap = await db.collection('settings').doc('shop').get();
-            state.shopSettings = snap.exists ? { ...fallback, ...snap.data() } : fallback;
-        } catch (e) { console.warn('settings:', e); state.shopSettings = fallback; }
-    }
-
-    async function saveShopSettings() {
-        const data = {
-            name: $('#shopName')?.value.trim() || 'Senimdi Sapa',
-            address: $('#shopAddress')?.value.trim() || '',
-            deliveryPrice: Number($('#deliveryPrice')?.value || 0),
-            freeDeliveryFrom: Number($('#freeDeliveryFrom')?.value || 0),
-            notice: $('#shopNotice')?.value.trim() || '',
-            lat: state.shopSettings.lat,
-            lng: state.shopSettings.lng,
-            updatedAt: window.firebase?.firestore?.FieldValue?.serverTimestamp?.() || new Date().toISOString()
-        };
-        if (window.B2B && window.B2B.USE_DEMO) window.B2B.DemoStore.set('shopSettings', data);
-        else await (window.B2B?.db || window.db).collection('settings').doc('shop').set(data, { merge: true });
-        state.shopSettings = { ...state.shopSettings, ...data };
-        renderDeliveryMap(); renderAdminMap(); updateCartUI();
-        toast('Настройки магазина сохранены', 'success');
-    }
-
-    function calculateDelivery(subtotal) {
-        if ($('#deliveryMethod')?.value === 'pickup') return 0;
-        const s = state.shopSettings || {};
-        return Number(s.freeDeliveryFrom) > 0 && subtotal >= Number(s.freeDeliveryFrom) ? 0 : Number(s.deliveryPrice || 0);
-    }
-
-    function renderDeliveryMap() {
-        const el = $('#deliveryMap');
-        if (!el || typeof L === 'undefined') return;
-        const lat = state.shopSettings.lat || 43.2627, lng = state.shopSettings.lng || 76.9345;
-        if (!state.deliveryMap) {
-            state.deliveryMap = L.map(el).setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(state.deliveryMap);
-            state.deliveryMap.on('click', e => setDeliveryPoint(e.latlng.lat, e.latlng.lng));
-        } else state.deliveryMap.setView([lat, lng], 13);
-        if (state.deliveryMarker) state.deliveryMarker.remove();
-        state.deliveryMarker = L.marker([lat, lng]).addTo(state.deliveryMap).bindPopup('Точка доставки').openPopup();
-        setTimeout(() => state.deliveryMap.invalidateSize(), 150);
-    }
-
-    function setDeliveryPoint(lat, lng) {
-        if (state.deliveryMarker) state.deliveryMarker.remove();
-        state.deliveryMarker = L.marker([lat, lng]).addTo(state.deliveryMap);
-        state.deliveryMap?.setView([lat, lng], 15);
-        const address = $('#deliveryAddress');
-        if (address) address.value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        toast('Точка доставки выбрана', 'success');
-    }
-
-    function renderAdminMap() {
-        const el = $('#adminMap');
-        if (!el || typeof L === 'undefined') return;
-        const lat = state.shopSettings.lat || 43.2627, lng = state.shopSettings.lng || 76.9345;
-        if (!state.adminMap) {
-            state.adminMap = L.map(el).setView([lat, lng], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(state.adminMap);
-            state.adminMap.on('click', e => {
-                state.shopSettings.lat = e.latlng.lat; state.shopSettings.lng = e.latlng.lng;
-                if (state.adminMarker) state.adminMarker.remove();
-                state.adminMarker = L.marker([e.latlng.lat, e.latlng.lng]).addTo(state.adminMap);
-            });
-        } else state.adminMap.setView([lat, lng], 13);
-        if (state.adminMarker) state.adminMarker.remove();
-        state.adminMarker = L.marker([lat, lng]).addTo(state.adminMap).bindPopup(state.shopSettings.name || 'Магазин');
-        setTimeout(() => state.adminMap.invalidateSize(), 150);
-    }
-
-    function fillShopSettingsForm() {
-        const s = state.shopSettings || {};
-        if ($('#shopName')) $('#shopName').value = s.name || '';
-        if ($('#shopAddress')) $('#shopAddress').value = s.address || '';
-        if ($('#deliveryPrice')) $('#deliveryPrice').value = s.deliveryPrice ?? 500;
-        if ($('#freeDeliveryFrom')) $('#freeDeliveryFrom').value = s.freeDeliveryFrom ?? 10000;
-        if ($('#shopNotice')) $('#shopNotice').value = s.notice || '';
-    }
-
-    function renderBuyerOrders() {
-        const list = $('#buyerOrdersList'); if (!list) return;
-        const mine = state.invoices.filter(x => !state.user?.uid || x.userId === state.user.uid);
-        if (!mine.length) { list.innerHTML = '<div class="text-center py-10 text-slate-400">У вас пока нет заказов.</div>'; return; }
-        list.innerHTML = mine.map(inv => `
-            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                <div class="flex justify-between gap-3"><div><b class="text-slate-800">Заказ #${escapeHtml(String(inv.id).slice(-8))}</b><div class="text-xs text-slate-400 mt-1">${inv.createdAt ? new Date(inv.createdAt).toLocaleString('ru-RU') : '—'}</div></div><span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">${escapeHtml(inv.status || 'Новый')}</span></div>
-                <div class="text-sm text-slate-600 mt-3">${(inv.items||[]).map(i => `${escapeHtml(i.name)} × ${i.qty}`).join(', ')}</div>
-                <div class="flex flex-wrap gap-3 mt-3 text-xs"><span>Товары: <b>${fmt(inv.subtotal ?? inv.total)}</b></span><span>Доставка: <b>${fmt(inv.deliveryFee || 0)}</b></span><span class="text-pink-600">Итого: <b>${fmt(inv.total)}</b></span></div>
-                ${inv.deliveryAddress ? `<div class="text-xs text-slate-500 mt-2">${escapeHtml(inv.deliveryAddress)}</div>` : ''}
-            </div>`).join('');
-    }
-
     // ========== AUTH ==========
     async function showApp(user, role = 'buyer') {
         state.user = user;
@@ -406,11 +195,11 @@
         if (badge) {
             if (role === 'admin') {
                 badge.textContent = 'Администратор';
-                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-violet-100 text-violet-700 border border-violet-200';
+                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-cyan-100 text-cyan-800 border border-cyan-200';
                 $('#tabAdmin')?.classList.remove('hidden');
             } else {
                 badge.textContent = 'Покупатель';
-                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-pink-100 text-pink-700 border border-pink-200';
+                badge.className = 'text-xs px-3 py-1 rounded-full font-semibold bg-blue-100 text-blue-700 border border-blue-200';
                 $('#tabAdmin')?.classList.add('hidden');
             }
         }
@@ -504,24 +293,297 @@
             cartBadge.classList.toggle('hidden', count === 0);
         }
         
-        const subtotal = getCartTotal();
-        const delivery = calculateDelivery(subtotal);
-        const total = subtotal + delivery;
+        const total = getCartTotal();
         if ($('#invoiceTotal')) $('#invoiceTotal').textContent = fmt(total);
-        if ($('#deliverySummary')) $('#deliverySummary').textContent = delivery === 0 ? 'Доставка бесплатно' : `Доставка: ${fmt(delivery)}`;
         if ($('#submitInvoiceBtn')) {
-            $('#submitInvoiceBtn').disabled = count === 0 || !$('#selectStore')?.value;
+            const storeOk = !!$('#selectStore')?.value;
+            const isDelivery = ($('#selectStore')?.value || '').includes('Доставка');
+            const addrOk = !isDelivery || (($('#deliveryAddress')?.value || '').trim().length > 3);
+            $('#submitInvoiceBtn').disabled = count === 0 || !storeOk || !addrOk;
         }
     }
 
     // ========== RENDER CATALOG ==========
+    function loadFavorites() {
+        try {
+            const raw = localStorage.getItem('smarket_favorites');
+            state.favorites = raw ? JSON.parse(raw) : {};
+        } catch { state.favorites = {}; }
+    }
+    function saveFavorites() {
+        localStorage.setItem('smarket_favorites', JSON.stringify(state.favorites));
+        updateFavUI();
+    }
+    function toggleFavorite(productId) {
+        if (state.favorites[productId]) delete state.favorites[productId];
+        else state.favorites[productId] = true;
+        saveFavorites();
+        renderCatalog();
+        renderFavorites();
+    }
+    function updateFavUI() {
+        const n = Object.keys(state.favorites).length;
+        const el = $('#favCount');
+        if (el) {
+            el.textContent = n;
+            el.classList.toggle('hidden', n === 0);
+        }
+    }
+
+    function loadCategories() {
+        const fromProducts = [...new Set(state.products.map(p => p.category).filter(Boolean))];
+        let stored = [];
+        try {
+            if (window.B2B && window.B2B.USE_DEMO) {
+                stored = window.B2B.DemoStore.get('categories', []) || [];
+            } else {
+                stored = JSON.parse(localStorage.getItem('smarket_categories') || '[]');
+            }
+        } catch { stored = []; }
+        const defaults = ['Напитки', 'Снэки', 'Сладости', 'Молочное', 'Еда / Кафе', 'Одежда', 'Техника', 'Авто'];
+        const base = stored.length ? stored : defaults;
+        state.categories = [...new Set([...base, ...fromProducts])].sort((a,b) => a.localeCompare(b, 'ru'));
+        try { localStorage.setItem('smarket_categories', JSON.stringify(state.categories)); } catch {}
+    }
+    function persistCategories() {
+        if (window.B2B && window.B2B.USE_DEMO) {
+            window.B2B.DemoStore.set('categories', state.categories);
+        }
+        localStorage.setItem('smarket_categories', JSON.stringify(state.categories));
+        fillCategorySelects();
+        renderCategoryChips();
+        renderAdminCategories();
+    }
+    function addCategory(name) {
+        name = (name || '').trim();
+        if (!name) return toast('Введите название категории', 'warn');
+        if (state.categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+            return toast('Такая категория уже есть', 'warn');
+        }
+        state.categories.push(name);
+        state.categories.sort((a,b) => a.localeCompare(b, 'ru'));
+        persistCategories();
+        toast('Категория добавлена', 'success');
+    }
+    function removeCategory(name) {
+        state.categories = state.categories.filter(c => c !== name);
+        persistCategories();
+        toast('Категория удалена', 'success');
+    }
+    function fillCategorySelects() {
+        const sel = $('#prodCategory');
+        if (!sel) return;
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">Без категории</option>' +
+            state.categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+        if (cur) sel.value = cur;
+    }
+    function renderAdminCategories() {
+        const box = $('#adminCategoriesList');
+        if (!box) return;
+        if (!state.categories.length) {
+            box.innerHTML = '<span class="text-xs text-slate-400">Категорий пока нет</span>';
+            return;
+        }
+        box.innerHTML = state.categories.map(c => `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700">
+                ${escapeHtml(c)}
+                <button type="button" data-del-cat="${escapeHtml(c)}" class="text-slate-400 hover:text-red-500 font-bold leading-none">&times;</button>
+            </span>`).join('');
+        box.querySelectorAll('[data-del-cat]').forEach(btn => {
+            btn.addEventListener('click', () => removeCategory(btn.dataset.delCat));
+        });
+    }
+    function renderCategoryChips() {
+        const box = $('#categoryChips');
+        if (!box) return;
+
+        // Иконки по названию (как на маркетплейсах)
+        const iconMap = {
+            'напитки': 'cup-soda',
+            'снэки': 'cookie',
+            'сладости': 'candy',
+            'молочное': 'milk',
+            'еда': 'utensils',
+            'еда / кафе': 'utensils',
+            'кафе': 'utensils',
+            'одежда': 'shirt',
+            'техника': 'smartphone',
+            'жильё': 'home',
+            'жилье': 'home',
+            'авто': 'car',
+            'такси': 'car-taxi-front',
+            'мастера': 'wrench',
+            'скот': 'beef',
+            'скот / агро': 'wheat',
+            'агро': 'wheat',
+            'электроника': 'cpu',
+            'красота': 'sparkles',
+            'спорт': 'dumbbell',
+            'дети': 'baby',
+            'дом': 'sofa',
+            'книги': 'book-open',
+            'животные': 'paw-print',
+            'услуги': 'briefcase',
+            'мебель': 'armchair',
+            'обувь': 'footprints',
+            'игрушки': 'toy-brick'
+        };
+        const colors = [
+            { bg: 'bg-amber-50', icon: 'text-amber-500' },
+            { bg: 'bg-blue-50', icon: 'text-blue-600' },
+            { bg: 'bg-indigo-50', icon: 'text-indigo-500' },
+            { bg: 'bg-sky-50', icon: 'text-sky-600' },
+            { bg: 'bg-rose-50', icon: 'text-rose-500' },
+            { bg: 'bg-violet-50', icon: 'text-violet-500' },
+            { bg: 'bg-emerald-50', icon: 'text-emerald-600' },
+            { bg: 'bg-orange-50', icon: 'text-orange-500' },
+            { bg: 'bg-cyan-50', icon: 'text-cyan-600' },
+            { bg: 'bg-fuchsia-50', icon: 'text-fuchsia-500' }
+        ];
+
+        const cats = state.categories.length ? state.categories : [];
+        if (cats.length === 0) {
+            box.innerHTML = `<div class="col-span-4 text-center py-6 text-sm text-slate-400 bg-white rounded-2xl border border-dashed border-slate-200">Категории появятся, когда админ их добавит</div>`;
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        box.innerHTML = cats.map((c, i) => {
+            const key = c.toLowerCase().trim();
+            let icon = 'tag';
+            for (const [k, v] of Object.entries(iconMap)) {
+                if (key.includes(k) || k.includes(key)) { icon = v; break; }
+            }
+            const col = colors[i % colors.length];
+            const active = state.activeCategory === c;
+            return `
+            <button type="button" data-cat="${escapeHtml(c)}"
+                class="cat-card group flex flex-col items-center justify-center gap-2 p-3 sm:p-4 rounded-2xl border transition-all duration-200
+                ${active
+                    ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/20 scale-[1.02]'
+                    : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 hover:-translate-y-0.5'}">
+                <span class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center ${active ? 'bg-white/20' : col.bg} transition-colors">
+                    <i data-lucide="${icon}" class="w-5 h-5 sm:w-6 sm:h-6 ${active ? 'text-white' : col.icon}"></i>
+                </span>
+                <span class="text-[11px] sm:text-xs font-semibold text-center leading-tight line-clamp-2 ${active ? 'text-white' : 'text-slate-700'}">${escapeHtml(c)}</span>
+            </button>`;
+        }).join('');
+
+        box.querySelectorAll('[data-cat]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cat = btn.dataset.cat;
+                state.activeCategory = (state.activeCategory === cat) ? 'all' : cat;
+                renderCategoryChips();
+                renderCatalog();
+            });
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+
+
+    function productCardHtml(p) {
+        const qty = state.cart[p.id] || 0;
+        const fav = !!state.favorites[p.id];
+        const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200`;
+        const cat = p.category ? `<span class="text-[10px] font-medium text-slate-400 truncate">${escapeHtml(p.category)}</span>` : '';
+        return `
+            <div class="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm flex flex-col transition-all hover:shadow-md hover:border-slate-300 group">
+                <div class="aspect-square bg-slate-50 relative overflow-hidden">
+                    <img src="${img}" alt="${escapeHtml(p.name)}" class="w-full h-full object-cover" loading="lazy"
+                         onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=200'">
+                    <button type="button" data-fav="${p.id}" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur border border-slate-200 flex items-center justify-center shadow-sm hover:scale-105 transition-transform" title="Избранное">
+                        <i data-lucide="heart" class="w-4 h-4 ${fav ? 'text-red-500 fill-red-500' : 'text-slate-400'}" style="${fav ? 'fill: currentColor' : ''}"></i>
+                    </button>
+                    ${p.stock < 10 ? '<span class="absolute top-2 left-2 text-[10px] px-2 py-0.5 bg-red-500 text-white font-semibold rounded-md">Мало</span>' : ''}
+                </div>
+                <div class="p-3 flex flex-col flex-1">
+                    ${cat}
+                    <h4 class="font-semibold text-slate-800 text-sm leading-snug line-clamp-2 mb-1 mt-0.5">${escapeHtml(p.name)}</h4>
+                    <div class="text-red-500 font-bold text-base mb-0.5">${fmt(p.price)}</div>
+                    <div class="text-[11px] text-slate-400 mb-3">В наличии: ${p.stock} шт</div>
+                    <div class="mt-auto">
+                        ${qty > 0 ? `
+                            <div class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl p-1">
+                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="dec" data-id="${p.id}">−</button>
+                                <span class="font-bold text-slate-800 text-sm px-2">${qty}</span>
+                                <button class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="inc" data-id="${p.id}">+</button>
+                            </div>
+                        ` : `
+                            <button class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors active:scale-[0.98]" data-action="add" data-id="${p.id}">
+                                В корзину
+                            </button>
+                        `}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function bindProductCardEvents(root) {
+        if (!root) return;
+        root.querySelectorAll('[data-action]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const id = btn.dataset.id;
+                const action = btn.dataset.action;
+                if (action === 'add' || action === 'inc') addToCart(id, 1);
+                if (action === 'dec') addToCart(id, -1);
+            });
+        });
+        root.querySelectorAll('[data-fav]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFavorite(btn.dataset.fav);
+            });
+        });
+        if (window.lucide) lucide.createIcons();
+    }
+
     function renderCatalog() {
-        const list=$('#productList'), empty=$('#emptyCatalog'); if(!list)return;
-        let items=[...state.products];
-        if(state.category!=='all') items=items.filter(p=>(p.category||'')===state.category);
-        if(state.searchQuery){const q=state.searchQuery.toLowerCase();items=items.filter(p=>(p.name||'').toLowerCase().includes(q));}
-        switch(state.sortBy){case 'price-asc':items.sort((a,b)=>a.price-b.price);break;case 'price-desc':items.sort((a,b)=>b.price-a.price);break;case 'stock':items.sort((a,b)=>b.stock-a.stock);break;default:items.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru'));}
-        empty?.classList.toggle('hidden',items.length>0); list.innerHTML=items.map(productCard).join(''); bindProductActions(list);
+        const list = $('#productList');
+        const empty = $('#emptyCatalog');
+        if (!list) return;
+
+        let items = [...state.products];
+        
+        if (state.activeCategory && state.activeCategory !== 'all') {
+            items = items.filter(p => (p.category || '') === state.activeCategory);
+        }
+        if (state.searchQuery) {
+            const q = state.searchQuery.toLowerCase();
+            items = items.filter(p => p.name.toLowerCase().includes(q) || (p.category || '').toLowerCase().includes(q));
+        }
+        
+        switch (state.sortBy) {
+            case 'price-asc': items.sort((a, b) => a.price - b.price); break;
+            case 'price-desc': items.sort((a, b) => b.price - a.price); break;
+            case 'stock': items.sort((a, b) => b.stock - a.stock); break;
+            default: items.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+        }
+        
+        if (items.length === 0) {
+            list.innerHTML = '';
+            empty?.classList.remove('hidden');
+            return;
+        }
+        empty?.classList.add('hidden');
+        list.innerHTML = items.map(productCardHtml).join('');
+        bindProductCardEvents(list);
+    }
+
+    function renderFavorites() {
+        const list = $('#favoritesList');
+        const empty = $('#emptyFavorites');
+        if (!list) return;
+        const items = state.products.filter(p => state.favorites[p.id]);
+        if (items.length === 0) {
+            list.innerHTML = '';
+            empty?.classList.remove('hidden');
+            return;
+        }
+        empty?.classList.add('hidden');
+        list.innerHTML = items.map(productCardHtml).join('');
+        bindProductCardEvents(list);
     }
 
     // ========== RENDER INVOICE ==========
@@ -549,7 +611,7 @@
                     <div class="font-bold text-sm text-slate-800 truncate">${escapeHtml(p.name)}</div>
                     <div class="text-xs text-slate-400 mt-0.5">${fmt(p.price)} × ${qty} шт</div>
                 </div>
-                <div class="font-bold text-pink-600 text-sm whitespace-nowrap">${fmt(p.price * qty)}</div>
+                <div class="font-bold text-blue-600 text-sm whitespace-nowrap">${fmt(p.price * qty)}</div>
                 <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100">
                     <button class="w-7 h-7 flex items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm font-bold" data-action="dec" data-id="${id}">−</button>
                     <span class="w-6 text-center text-xs font-bold">${qty}</span>
@@ -582,20 +644,20 @@
         }
         
         container.innerHTML = featured.map((p) => {
-            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=fce7f3&color=db2777&size=400`;
+            const img = p.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=dbeafe&color=2563eb&size=400`;
             return `
-            <div class="carousel-slide flex items-center justify-between px-8 py-4 bg-gradient-to-r from-pink-500/10 to-violet-500/10 w-full shrink-0">
+            <div class="carousel-slide flex items-center justify-between px-8 py-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 w-full shrink-0">
                 <div class="max-w-xs">
-                    <span class="text-[10px] font-bold uppercase tracking-widest text-pink-600 bg-pink-100 px-2.5 py-1 rounded-full">Рекомендуемый товар</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">Рекомендуемый товар</span>
                     <h3 class="text-lg font-bold text-slate-800 mt-2 line-clamp-1">${escapeHtml(p.name)}</h3>
-                    <div class="text-xl font-extrabold text-pink-600 mt-1">${fmt(p.price)}</div>
+                    <div class="text-xl font-extrabold text-blue-600 mt-1">${fmt(p.price)}</div>
                 </div>
                 <img src="${img}" alt="${escapeHtml(p.name)}" class="w-28 h-28 object-cover rounded-2xl shadow-md border-2 border-white shrink-0">
             </div>`;
         }).join('');
         
         dots.innerHTML = featured.map((_, i) => 
-            `<button class="w-2 h-2 rounded-full transition-all ${i === 0 ? 'bg-pink-500 w-5' : 'bg-slate-300'}" data-idx="${i}"></button>`
+            `<button class="w-2 h-2 rounded-full transition-all ${i === 0 ? 'bg-blue-600 w-5' : 'bg-slate-300'}" data-idx="${i}"></button>`
         ).join('');
         
         state.carouselIndex = 0;
@@ -617,7 +679,7 @@
         container.style.transform = `translateX(-${state.carouselIndex * 100}%)`;
         
         $$('#carouselDots button').forEach((btn, i) => {
-            btn.className = `w-2 h-2 rounded-full transition-all ${i === state.carouselIndex ? 'bg-pink-500 w-5' : 'bg-slate-300'}`;
+            btn.className = `w-2 h-2 rounded-full transition-all ${i === state.carouselIndex ? 'bg-blue-600 w-5' : 'bg-slate-300'}`;
         });
     }
 
@@ -631,25 +693,43 @@
             return;
         }
 
-        container.innerHTML = state.products.map(p => `
-            <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl transition-all hover:bg-white hover:shadow-sm">
+        // Группировка по категориям
+        const groups = {};
+        state.products.forEach(p => {
+            const key = p.category || 'Без категории';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(p);
+        });
+        const order = [...state.categories.filter(c => groups[c]), ...Object.keys(groups).filter(k => !state.categories.includes(k))];
+
+        container.innerHTML = order.map(cat => {
+            const items = groups[cat] || [];
+            const list = items.map(p => `
+            <div class="flex items-center justify-between p-3 bg-white border border-slate-200/80 rounded-xl transition-all hover:shadow-sm">
                 <div class="flex items-center space-x-3 min-w-0">
-                    <img src="${p.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.name)}" class="w-10 h-10 rounded-xl object-cover shrink-0 border">
+                    <img src="${p.image || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.name) + '&background=dbeafe&color=2563eb'}" class="w-10 h-10 rounded-lg object-cover shrink-0 border border-slate-100">
                     <div class="min-w-0">
-                        <p class="font-bold text-slate-800 text-sm truncate">${escapeHtml(p.name)}</p>
-                        <p class="text-xs text-slate-400 font-medium">
-                            Продажа: <span class="text-pink-600 font-bold">${fmt(p.price)}</span> 
-                            | Закуп: <span class="text-slate-600 font-semibold">${fmt(p.costPrice || 0)}</span> 
-                            | Склад: ${p.stock} шт
+                        <p class="font-semibold text-slate-800 text-sm truncate">${escapeHtml(p.name)}</p>
+                        <p class="text-xs text-slate-400">
+                            <span class="text-blue-600 font-bold">${fmt(p.price)}</span>
+                            · закуп ${fmt(p.costPrice || 0)} · ${p.stock} шт
                         </p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2 shrink-0">
-                    <button onclick="window.B2B_EditProduct('${p.id}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold rounded-xl border border-amber-200 transition-colors">Изменить</button>
-                    <button onclick="window.B2B_DeleteProduct('${p.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-xl border border-rose-200 transition-colors">Удалить</button>
+                    <button onclick="window.B2B_EditProduct('${p.id}')" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold rounded-lg border border-amber-200">Изменить</button>
+                    <button onclick="window.B2B_DeleteProduct('${p.id}')" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg border border-rose-200">Удалить</button>
                 </div>
-            </div>
-        `).join('');
+            </div>`).join('');
+            return `
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <h4 class="text-xs font-bold uppercase tracking-wide text-slate-500">${escapeHtml(cat)}</h4>
+                    <span class="text-[11px] text-slate-400">${items.length} шт</span>
+                </div>
+                <div class="space-y-2">${list}</div>
+            </div>`;
+        }).join('');
     }
 
     function filterInvoicesByPeriod() {
@@ -747,10 +827,9 @@
                     <div>
                         <div class="font-bold text-slate-800 text-sm">${escapeHtml(inv.store || 'Магазин')}</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">${date} • Покупатель: ${escapeHtml(inv.userName || '—')}</div>
+                        ${inv.delivery ? `<div class="text-[11px] text-blue-600 mt-1 font-medium">${escapeHtml(inv.delivery.address || '—')}${inv.delivery.exactNote ? ' · ' + escapeHtml(inv.delivery.exactNote) : ''}${inv.delivery.lat ? ' · карта: ' + inv.delivery.lat + ',' + inv.delivery.lng : ''}</div>` : ''}
+                        ${inv.adminNote ? `<div class="text-[11px] text-cyan-700 mt-0.5">Админ: ${escapeHtml(inv.adminNote)}</div>` : ''}
                     </div>
-                    <select onchange="window.B2B_UpdateOrderStatus('${inv.id}', this.value)" class="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-2 py-1.5">
-                        ${['Новый','Подтверждён','Собирается','В доставке','Доставлен','Отменён'].map(st => `<option ${inv.status===st?'selected':''}>${st}</option>`).join('')}
-                    </select>
                     <div class="flex items-center space-x-3">
                         <div class="text-right">
                             <div class="font-extrabold text-emerald-600 text-base whitespace-nowrap">${fmt(inv.total || 0)}</div>
@@ -814,7 +893,7 @@
             <body>
                 <div class="header">
                     <div>
-                        <div class="title">Senimdi Sapa</div>
+                        <div class="title">S-Market</div>
                         <div style="font-size: 12px; color: #475569;">Торговая точка: <b>${escapeHtml(inv.store || 'Магазин')}</b></div>
                     </div>
                     <div style="text-align: right; font-size: 12px;">
@@ -824,7 +903,7 @@
                 </div>
 
                 <div class="meta">
-                    <b>Отпустил (Продавец):</b> ${escapeHtml(inv.userName || '—')}
+                    <b>Заказчик (Покупатель):</b> ${escapeHtml(inv.userName || '—')}
                 </div>
 
                 <table>
@@ -988,23 +1067,6 @@
         printWindow.document.close();
     };
 
-    async function updateOrderStatus(orderId, status) {
-        const inv = state.invoices.find(i => i.id === orderId);
-        if (!inv || state.role !== 'admin') return;
-        try {
-            if (window.B2B?.USE_DEMO) {
-                const list = window.B2B.DemoStore.get('invoices', []);
-                const item = list.find(x => x.id === orderId); if (item) item.status = status;
-                window.B2B.DemoStore.set('invoices', list);
-            } else {
-                await (window.B2B?.db || window.db).collection('invoices').doc(orderId).update({ status });
-            }
-            inv.status = status; renderAdminStats(); renderBuyerOrders();
-            toast('Статус заказа обновлён', 'success');
-        } catch (e) { toast('Не удалось изменить статус заказа', 'error'); }
-    }
-    window.B2B_UpdateOrderStatus = updateOrderStatus;
-
     // ========== GLOBAL PRODUCT ACTIONS ==========
     window.B2B_EditProduct = function(id) {
         const product = state.products.find(p => p.id === id);
@@ -1016,6 +1078,8 @@
         if ($('#prodCostPrice')) $('#prodCostPrice').value = product.costPrice || 0;
         if ($('#prodStock')) $('#prodStock').value = product.stock;
         if ($('#prodImageUrl')) $('#prodImageUrl').value = product.image || '';
+        fillCategorySelects();
+        if ($('#prodCategory')) $('#prodCategory').value = product.category || '';
         
         if ($('#formTitle')) $('#formTitle').textContent = 'Редактирование товара';
         if ($('#saveProdBtn')) $('#saveProdBtn').textContent = 'Сохранить изменения';
@@ -1048,31 +1112,82 @@
 
     // ========== IMPORT FEATURE ==========
     function downloadSampleCSV() {
-    // 1. Используем разделитель точку с запятой (;)
-    const headers = ["Название", "Продажная цена", "Закупочная цена", "Количество", "Ссылка на фото"];
-    const rows = [
-        ["Чай KARAK Tea", 1500, 1000, 50, "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500"],
-        ["Кофе Арабика 250г", 3200, 2100, 30, "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500"]
-    ];
+        // Колонки: Название; Категория; Продажная цена; Закупочная цена; Количество; Ссылка на фото
+        const headers = ["Название", "Категория", "Продажная цена", "Закупочная цена", "Количество", "Ссылка на фото"];
+        const rows = [
+            ["Чай KARAK Tea", "Напитки", 1500, 1000, 50, "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=500"],
+            ["Кофе Арабика 250г", "Напитки", 3200, 2100, 30, "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500"],
+            ["Чипсы Lays 150г", "Снэки", 320, 200, 95, ""],
+            ["Шоколад Nestle", "Сладости", 450, 300, 60, ""],
+            ["Йогурт Danone", "Молочное", 210, 140, 150, ""],
+            ["Футболка базовая", "Одежда", 3990, 2000, 40, ""],
+            ["Смартфон чехол", "Техника", 2500, 1200, 80, ""]
+        ];
 
-    // 2. Добавляем BOM (\uFEFF) в начало, чтобы Excel правильно понял UTF-8
-    let csvString = "\uFEFF" + headers.join(";") + "\n";
-    rows.forEach(row => {
-        csvString += row.join(";") + "\n";
-    });
+        let csvString = "\uFEFF" + headers.join(";") + "\n";
+        rows.forEach(row => {
+            csvString += row.join(";") + "\n";
+        });
 
-    // 3. Создаем Blob с явным указанием кодировки UTF-8
-    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "sample_products.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
+        const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "sample_products_s-market.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        toast('Скачан пример CSV с категориями', 'success');
+    }
+
+    function parseImportRow(obj) {
+        // Поддержка разных ключей (RU/EN) для JSON и нормализация
+        const name = (obj.name || obj.Название || obj.title || '').toString().trim() || 'Без названия';
+        const category = (obj.category || obj.Категория || obj.categoryName || '').toString().trim() || null;
+        const price = Number(obj.price ?? obj['Продажная цена'] ?? obj.salePrice ?? 0) || 0;
+        const costPrice = Number(obj.costPrice ?? obj['Закупочная цена'] ?? obj.cost ?? 0) || 0;
+        const stock = Number(obj.stock ?? obj['Количество'] ?? obj.qty ?? obj.quantity ?? 0) || 0;
+        const image = (obj.image || obj['Ссылка на фото'] || obj.imageUrl || obj.photo || '').toString().trim() || null;
+        return { name, category, price, costPrice, stock, image };
+    }
+
+    function parseCsvProducts(text) {
+        const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+        if (lines.length < 2) return [];
+
+        const delim = lines[0].includes(';') ? ';' : ',';
+        const headers = lines[0].split(delim).map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''));
+
+        // Индексы колонок по заголовкам (гибко)
+        const idx = {
+            name: headers.findIndex(h => /назван|name|title|товар/.test(h)),
+            category: headers.findIndex(h => /категор|category/.test(h)),
+            price: headers.findIndex(h => /продаж|price|цена$|sale/.test(h) && !/закуп|cost/.test(h)),
+            cost: headers.findIndex(h => /закуп|cost/.test(h)),
+            stock: headers.findIndex(h => /количест|stock|остаток|qty|quantity/.test(h)),
+            image: headers.findIndex(h => /ссылк|фото|image|photo|url|картинк/.test(h))
+        };
+        // Старый формат без категории: Название; Цена; Закуп; Кол-во; Фото
+        if (idx.name < 0) idx.name = 0;
+        if (idx.price < 0) idx.price = idx.category >= 0 ? 2 : 1;
+        if (idx.cost < 0) idx.cost = idx.category >= 0 ? 3 : 2;
+        if (idx.stock < 0) idx.stock = idx.category >= 0 ? 4 : 3;
+        if (idx.image < 0) idx.image = idx.category >= 0 ? 5 : 4;
+
+        return lines.slice(1).map(line => {
+            const parts = line.split(delim).map(p => p.trim().replace(/^"|"$/g, ''));
+            const category = idx.category >= 0 ? (parts[idx.category] || '').trim() : '';
+            return {
+                name: (parts[idx.name] || 'Без названия').trim(),
+                category: category || null,
+                price: Number(parts[idx.price]) || 0,
+                costPrice: Number(parts[idx.cost]) || 0,
+                stock: Number(parts[idx.stock]) || 0,
+                image: (parts[idx.image] || '').trim() || null
+            };
+        }).filter(p => p.name && p.name !== 'Без названия' || p.price > 0);
+    }
 
     async function handleFileImport(file) {
         const reader = new FileReader();
@@ -1081,21 +1196,12 @@
             let importedProducts = [];
 
             try {
-                if (file.name.endsWith('.json')) {
-                    importedProducts = JSON.parse(text);
+                if (file.name.toLowerCase().endsWith('.json')) {
+                    const raw = JSON.parse(text);
+                    const arr = Array.isArray(raw) ? raw : (raw.products || raw.items || []);
+                    importedProducts = arr.map(parseImportRow);
                 } else {
-                    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-                    const dataLines = lines.slice(1);
-                    importedProducts = dataLines.map(line => {
-                        const parts = line.split(/[,;]/);
-                        return {
-                            name: parts[0]?.trim() || 'Без названия',
-                            price: Number(parts[1]) || 0,
-                            costPrice: Number(parts[2]) || 0,
-                            stock: Number(parts[3]) || 0,
-                            image: parts[4]?.trim() || ''
-                        };
-                    });
+                    importedProducts = parseCsvProducts(text);
                 }
 
                 if (!importedProducts.length) {
@@ -1103,28 +1209,89 @@
                     return;
                 }
 
+                // Собираем категории из импорта и добавляем в список
+                const catsFromFile = [...new Set(
+                    importedProducts.map(p => p.category).filter(Boolean)
+                )];
+                let addedCats = 0;
+                for (const c of catsFromFile) {
+                    if (!state.categories.some(x => x.toLowerCase() === c.toLowerCase())) {
+                        state.categories.push(c);
+                        addedCats++;
+                    }
+                }
+                if (addedCats || catsFromFile.length) {
+                    state.categories.sort((a, b) => a.localeCompare(b, 'ru'));
+                    persistCategories();
+                }
+
                 for (const prod of importedProducts) {
                     await saveProduct(prod);
                 }
 
                 await loadProducts();
+                loadCategories();
+                fillCategorySelects();
+                renderCategoryChips();
                 renderCatalog();
                 renderAdminProducts();
+                renderAdminCategories();
                 renderCarousel();
                 renderAdminStats();
-                toast(`Успешно импортировано товаров: ${importedProducts.length}`, 'success');
+
+                const withCat = importedProducts.filter(p => p.category).length;
+                toast(
+                    `Импорт: ${importedProducts.length} товаров` +
+                    (catsFromFile.length ? `, категорий: ${catsFromFile.length}` : '') +
+                    (withCat ? ` (с категорией: ${withCat})` : ''),
+                    'success'
+                );
             } catch (err) {
                 console.error(err);
                 toast('Ошибка разбора файла импорта', 'error');
             }
         };
-        reader.readAsText(file);
+        reader.readAsText(file, 'UTF-8');
     }
 
     // ========== TABS ==========
+
+    // ========== DELIVERY MAP (Leaflet / OSM) ==========
+    function initDeliveryMap() {
+        const el = document.getElementById('deliveryMap');
+        if (!el || typeof L === 'undefined') return;
+        if (state.deliveryMap) {
+            setTimeout(() => state.deliveryMap.invalidateSize(), 100);
+            return;
+        }
+        // Центр — Алматы (как Kaspi/OLX KZ)
+        const defaultLat = 43.238949;
+        const defaultLng = 76.945465;
+        state.deliveryMap = L.map('deliveryMap', { zoomControl: true }).setView([defaultLat, defaultLng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(state.deliveryMap);
+        state.deliveryMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(state.deliveryMap);
+        const setCoords = (lat, lng) => {
+            if ($('#deliveryLat')) $('#deliveryLat').value = lat.toFixed(6);
+            if ($('#deliveryLng')) $('#deliveryLng').value = lng.toFixed(6);
+        };
+        setCoords(defaultLat, defaultLng);
+        state.deliveryMap.on('click', (e) => {
+            state.deliveryMarker.setLatLng(e.latlng);
+            setCoords(e.latlng.lat, e.latlng.lng);
+        });
+        state.deliveryMarker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            setCoords(pos.lat, pos.lng);
+        });
+        setTimeout(() => state.deliveryMap.invalidateSize(), 200);
+    }
+
     function switchTab(tabId) {
         $$('.tab-btn').forEach(btn => {
-            btn.classList.remove('active', 'bg-gradient-to-r', 'from-pink-500', 'to-violet-500', 'text-white', 'shadow-md');
+            btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-600', 'to-blue-700', 'bg-blue-600', 'text-white', 'shadow-md', 'shadow-sm');
             btn.classList.add('bg-white', 'text-slate-500');
         });
         $$('.tab-content').forEach(v => v.classList.add('hidden'));
@@ -1133,17 +1300,22 @@
         const view = $(`#view${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
         
         if (btn) {
-            btn.classList.add('active', 'bg-gradient-to-r', 'from-pink-500', 'to-violet-500', 'text-white', 'shadow-md');
+            btn.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-sm');
             btn.classList.remove('bg-white', 'text-slate-500');
         }
         if (view) view.classList.remove('hidden');
         
-        if (tabId === 'invoice') { renderInvoice(); setTimeout(renderDeliveryMap, 100); }
-        if (tabId === 'orders') renderBuyerOrders();
+        if (tabId === 'favorites') {
+            renderFavorites();
+        }
+        if (tabId === 'invoice') {
+            renderInvoice();
+            setTimeout(initDeliveryMap, 50);
+        }
         if (tabId === 'admin') {
             renderAdminProducts();
-            fillShopSettingsForm();
-            setTimeout(renderAdminMap, 100);
+            renderAdminCategories();
+            fillCategorySelects();
             loadInvoices().then(renderAdminStats);
         }
         if (window.lucide) lucide.createIcons();
@@ -1159,18 +1331,20 @@
 
     // ========== INIT DATA ==========
     async function initAppData() {
+        loadFavorites();
         await loadProducts();
+        loadCategories();
         await loadInvoices();
-        await loadShopSettings();
-        await loadCategories();
+        fillCategorySelects();
+        renderCategoryChips();
         renderCatalog();
+        renderFavorites();
         renderCarousel();
         updateCartUI();
+        updateFavUI();
         renderAdminProducts();
+        renderAdminCategories();
         renderAdminStats();
-        renderBuyerOrders();
-        renderFavorites();
-        fillShopSettingsForm();
         
         setInterval(() => {
             if ($('#appScreen')?.classList.contains('hidden')) return;
@@ -1183,18 +1357,31 @@
     function bindEvents() {
         // Tabs
         $('#tabCatalog')?.addEventListener('click', () => switchTab('catalog'));
-        $('#tabInvoice')?.addEventListener('click', () => switchTab('invoice'));
-        $('#tabFavorites')?.addEventListener('click', () => switchTab('favorites'));
-        $('#tabOrders')?.addEventListener('click', () => switchTab('orders'));
-        $('#deliveryMethod')?.addEventListener('change', updateCartUI);
-        $('#deliveryAddress')?.addEventListener('input', updateCartUI);
-        $('#locateMeBtn')?.addEventListener('click', () => {
-            if (!navigator.geolocation) return toast('Геолокация недоступна в браузере', 'warn');
-            navigator.geolocation.getCurrentPosition(pos => setDeliveryPoint(pos.coords.latitude, pos.coords.longitude), () => toast('Не удалось получить местоположение', 'warn'), { enableHighAccuracy: true, timeout: 10000 });
+        $('#catShowAllBtn')?.addEventListener('click', () => {
+            state.activeCategory = 'all';
+            renderCategoryChips();
+            renderCatalog();
+            toast('Показаны все категории');
         });
-        $('#addCategoryBtn')?.addEventListener('click', async () => { const name=$('#newCategoryName')?.value.trim(); if(!name)return toast('Введите название категории','warn'); if(state.categories.includes(name))return toast('Такая категория уже есть','warn'); state.categories.push(name); $('#newCategoryName').value=''; await saveCategories(); toast('Категория добавлена','success'); });
-        $('#saveShopSettingsBtn')?.addEventListener('click', saveShopSettings);
+        $('#tabFavorites')?.addEventListener('click', () => switchTab('favorites'));
+        $('#tabInvoice')?.addEventListener('click', () => switchTab('invoice'));
         $('#tabAdmin')?.addEventListener('click', () => switchTab('admin'));
+
+        $('#addCategoryBtn')?.addEventListener('click', () => {
+            addCategory($('#newCategoryInput')?.value);
+            if ($('#newCategoryInput')) $('#newCategoryInput').value = '';
+        });
+        $('#adminAddCategoryBtn')?.addEventListener('click', () => {
+            addCategory($('#adminNewCategory')?.value);
+            if ($('#adminNewCategory')) $('#adminNewCategory').value = '';
+        });
+        $('#adminNewCategory')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addCategory($('#adminNewCategory')?.value);
+                $('#adminNewCategory').value = '';
+            }
+        });
         
         // Logout
         $('#logoutBtn')?.addEventListener('click', logout);
@@ -1215,10 +1402,10 @@
         $$('.report-period-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 $$('.report-period-btn').forEach(b => {
-                    b.classList.remove('active', 'bg-pink-100', 'text-pink-700', 'border', 'border-pink-200');
+                    b.classList.remove('active', 'bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
                     b.classList.add('bg-slate-100', 'text-slate-600');
                 });
-                btn.classList.add('active', 'bg-pink-100', 'text-pink-700', 'border', 'border-pink-200');
+                btn.classList.add('active', 'bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
                 btn.classList.remove('bg-slate-100', 'text-slate-600');
                 
                 state.reportPeriod = btn.dataset.period;
@@ -1296,35 +1483,78 @@
         });
         
         // Store select
-        $('#selectStore')?.addEventListener('change', updateCartUI);
         
-        // Submit buyer order
+        // Submit Invoice
         $('#submitInvoiceBtn')?.addEventListener('click', async () => {
-            if (getCartCount() === 0) return toast('Корзина пуста', 'warn');
-            const deliveryAddress = $('#deliveryAddress')?.value.trim();
-            const deliveryMethod = $('#deliveryMethod')?.value || 'delivery';
-            if (deliveryMethod === 'delivery' && !deliveryAddress) return toast('Укажите адрес доставки или точку на карте', 'warn');
+            const store = $('#selectStore').value;
+            if (!store) {
+                toast('Выберите способ получения', 'warn');
+                return;
+            }
+            if (getCartCount() === 0) {
+                toast('Корзина пуста', 'warn');
+                return;
+            }
+            const isDelivery = store.includes('Доставка');
+            const address = ($('#deliveryAddress')?.value || '').trim();
+            const exactNote = ($('#deliveryExactNote')?.value || '').trim();
+            if (isDelivery && address.length < 4) {
+                toast('Укажите адрес доставки', 'warn');
+                return;
+            }
+            
             const items = Object.entries(state.cart).map(([productId, qty]) => {
                 const p = state.products.find(x => x.id === productId);
-                return { productId, name: p?.name, price: p?.price || 0, costPrice: p?.costPrice || 0, qty };
+                return { 
+                    productId, 
+                    name: p?.name, 
+                    price: p?.price || 0,
+                    costPrice: p?.costPrice || 0,
+                    qty 
+                };
             });
-            const subtotal = getCartTotal();
-            const deliveryFee = calculateDelivery(subtotal);
+            
             const invoice = {
-                store: state.shopSettings.name || 'Магазин', items, subtotal, deliveryFee,
-                total: subtotal + deliveryFee, deliveryMethod,
-                deliveryAddress: deliveryMethod === 'delivery' ? deliveryAddress : (state.shopSettings.address || 'Самовывоз'),
-                deliveryNote: $('#deliveryNote')?.value.trim() || '',
-                deliveryLat: state.deliveryMarker?.getLatLng?.().lat || state.shopSettings.lat || null,
-                deliveryLng: state.deliveryMarker?.getLatLng?.().lng || state.shopSettings.lng || null,
-                status: 'Новый', userId: state.user?.uid || 'demo', userName: state.user?.displayName || 'Покупатель'
+                store,
+                items,
+                total: getCartTotal(),
+                userId: state.user?.uid || 'demo',
+                userName: state.user?.displayName || 'Покупатель',
+                role: state.role || 'buyer',
+                delivery: {
+                    address: address || null,
+                    exactNote: exactNote || null,
+                    lat: $('#deliveryLat')?.value || null,
+                    lng: $('#deliveryLng')?.value || null,
+                    type: isDelivery ? 'courier' : 'pickup'
+                },
+                status: 'new',
+                adminNote: null
             };
+            
             try {
                 await saveInvoice(invoice);
-                state.cart = {}; updateCartUI(); renderInvoice(); renderCatalog(); renderBuyerOrders();
-                $('#deliveryAddress').value = ''; $('#deliveryNote').value = '';
-                toast('Заказ оформлен успешно!', 'success'); switchTab('orders');
-            } catch (e) { console.error(e); toast('Ошибка сохранения заказа: ' + (e.message || ''), 'error'); }
+                state.cart = {};
+                if ($('#deliveryAddress')) $('#deliveryAddress').value = '';
+                if ($('#deliveryExactNote')) $('#deliveryExactNote').value = '';
+                updateCartUI();
+                renderInvoice();
+                renderCatalog();
+                toast('Заказ оформлен успешно!', 'success');
+                switchTab('catalog');
+            } catch (e) {
+                console.error(e);
+                toast('Ошибка сохранения заказа', 'error');
+            }
+        });
+        
+        // Live-check address for submit enable
+        $('#deliveryAddress')?.addEventListener('input', updateCartUI);
+        $('#selectStore')?.addEventListener('change', () => {
+            updateCartUI();
+            const isDelivery = ($('#selectStore')?.value || '').includes('Доставка');
+            const block = $('#deliveryBlock');
+            if (block) block.style.opacity = isDelivery ? '1' : '0.65';
         });
         
         // Save / Edit Product Form
@@ -1335,7 +1565,6 @@
             const price = +$('#prodPrice').value;
             const costPrice = +$('#prodCostPrice').value || 0;
             const stock = +$('#prodStock').value;
-            const category = $('#prodCategory')?.value || '';
             const imageUrlInput = $('#prodImageUrl')?.value.trim();
             const fileInput = $('#prodImage');
             
@@ -1349,14 +1578,15 @@
                 image = URL.createObjectURL(fileInput.files[0]);
             }
             
+            const category = ($('#prodCategory')?.value || '').trim() || null;
             const product = {
                 ...(id ? { id } : {}),
                 name,
                 price,
                 costPrice,
                 stock,
-                category,
-                image
+                image,
+                category
             };
             
             try {

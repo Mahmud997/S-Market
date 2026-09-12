@@ -198,17 +198,3 @@ Authentication → Phone → **Phone numbers for testing**:
 ---
 
 Готово! После настройки `USE_DEMO = false` приложение использует реальный Firebase Auth.
-
-
-## Настройки магазина и доставки
-Администратор в разделе «Админ» задаёт название, адрес, стоимость доставки, порог бесплатной доставки и точку магазина на карте. Эти данные сохраняются в `settings/shop`.
-
-Рекомендуемый дополнительный блок Firestore Rules для настроек:
-
-```
-match /settings/{docId} {
-  allow read: if request.auth != null;
-  allow write: if request.auth != null &&
-    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-}
-```

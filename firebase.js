@@ -91,17 +91,19 @@ const DemoStore = {
     seed() {
         if (!this.get('products')) {
             const seed = [
-                { id: 'p1', name: 'Кола 0.5л', price: 180, stock: 240, image: null, featured: true },
-                { id: 'p2', name: 'Чипсы Lays 150г', price: 320, stock: 95, image: null, featured: true },
-                { id: 'p3', name: 'Вода Asu 1.5л', price: 95, stock: 500, image: null, featured: false },
-                { id: 'p4', name: 'Шоколад Nestle', price: 450, stock: 60, image: null, featured: true },
-                { id: 'p5', name: 'Сок Rich 1л', price: 380, stock: 120, image: null, featured: false },
-                { id: 'p6', name: 'Печенье Oreo', price: 290, stock: 80, image: null, featured: false },
-                { id: 'p7', name: 'Йогурт Danone', price: 210, stock: 150, image: null, featured: false },
-                { id: 'p8', name: 'Энергетик RedBull', price: 650, stock: 45, image: null, featured: true },
+                { id: 'p1', name: 'Кола 0.5л', price: 180, stock: 240, image: null, featured: true, category: 'Напитки' },
+                { id: 'p2', name: 'Чипсы Lays 150г', price: 320, stock: 95, image: null, featured: true, category: 'Снэки' },
+                { id: 'p3', name: 'Вода Asu 1.5л', price: 95, stock: 500, image: null, featured: false, category: 'Напитки' },
+                { id: 'p4', name: 'Шоколад Nestle', price: 450, stock: 60, image: null, featured: true, category: 'Сладости' },
+                { id: 'p5', name: 'Сок Rich 1л', price: 380, stock: 120, image: null, featured: false, category: 'Напитки' },
+                { id: 'p6', name: 'Печенье Oreo', price: 290, stock: 80, image: null, featured: false, category: 'Сладости' },
+                { id: 'p7', name: 'Йогурт Danone', price: 210, stock: 150, image: null, featured: false, category: 'Молочное' },
+                { id: 'p8', name: 'Энергетик RedBull', price: 650, stock: 45, image: null, featured: true, category: 'Напитки' },
             ];
             this.set('products', seed);
+            this.set('categories', ['Напитки', 'Снэки', 'Сладости', 'Молочное']);
         }
+        if (!this.get('categories')) this.set('categories', ['Напитки', 'Снэки', 'Сладости', 'Молочное']);
         if (!this.get('invoices')) this.set('invoices', []);
         if (!this.get('user')) this.set('user', null);
     }
