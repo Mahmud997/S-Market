@@ -1,0 +1,120 @@
+/* Custom styles for B2B Trade */
+
+/* Hide scrollbar for tabs on mobile */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Product card hover */
+.product-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgb(13 148 136 / 0.18);
+}
+
+/* Quantity controls */
+.qty-btn {
+    transition: background-color 0.15s;
+}
+.qty-btn:active {
+    transform: scale(0.92);
+}
+
+/* Toast animation */
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+@keyframes toast-out {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+}
+.toast-enter {
+    animation: toast-in 0.3s ease forwards;
+}
+.toast-exit {
+    animation: toast-out 0.25s ease forwards;
+}
+
+/* Carousel slide */
+.carousel-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.carousel-slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(15, 23, 42, 0.85) 0%, transparent 60%);
+}
+
+/* Loading skeleton */
+.skeleton {
+    background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Focus visible for a11y */
+:focus-visible {
+    outline: 2px solid #0d9488;
+    outline-offset: 2px;
+}
+
+/* Smooth tab transitions */
+.tab-content {
+    animation: fadeIn 0.25s ease;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Image preview in form */
+#fileLabel.has-file {
+    color: #5eead4;
+    border-color: #0d9488;
+}
+
+
+/* Delivery map */
+#deliveryMap {
+    min-height: 220px;
+}
+#deliveryMap .leaflet-container {
+    font-family: inherit;
+    border-radius: 1rem;
+}
+
+/* Kaspi/OLX-like product card polish */
+.product-card {
+    border-radius: 1.25rem;
+}
